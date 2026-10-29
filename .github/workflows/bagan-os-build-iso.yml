@@ -16,6 +16,13 @@ jobs:
           apt-get update
           apt-get install -y git live-build debootstrap debian-archive-keyring xz-utils
       - uses: actions/checkout@v4
+      - name: Check package names
+        run: |
+          apt-get update -qq
+          for p in $(grep -v '^#' bagan-os/build/config/package-lists/*.list.chroot); do
+            apt-cache show "$p" >/dev/null 2>&1 || { echo "MISSING PACKAGE: $p"; miss=1; }
+          done
+          [ -z "$miss" ]
       - name: Build
         working-directory: bagan-os/build
         run: |
