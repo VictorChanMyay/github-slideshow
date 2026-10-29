@@ -1,8 +1,8 @@
-# Myanmar OS (working title)
+# Bagan OS
 
 A free, open-source **desktop operating system for Myanmar users**: Burmese-first, Unicode-only, light enough for old hardware, and useful offline.
 
-> Working title: `TBD`. See [docs/NAMING.md](docs/NAMING.md).
+> Name: **Bagan OS** (ပုဂံ), a working title pending availability and community checks. See [docs/NAMING.md](docs/NAMING.md).
 
 ## Approach
 
@@ -22,7 +22,7 @@ We do **not** write a kernel. We build a **Debian-based Linux distribution** wit
 | `docs/ROADMAP.md` | Staged plan and milestones |
 | `docs/ARCHITECTURE.md` | Technical blueprint |
 | `docs/NAMING.md` | How we pick a name |
-| `../.github/workflows/myanmar-os-build-iso.yml` | Builds the ISO in CI |
+| `../.github/workflows/bagan-os-build-iso.yml` | Builds the ISO in CI |
 
 ## Build locally (Debian/Ubuntu host)
 

@@ -2,7 +2,7 @@ name: Build ISO
 on:
   workflow_dispatch:
   push:
-    paths: ['myanmar-os/build/**']
+    paths: ['bagan-os/build/**']
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -11,11 +11,11 @@ jobs:
       - name: Install live-build
         run: sudo apt-get update && sudo apt-get install -y live-build debootstrap
       - name: Build
-        working-directory: myanmar-os/build
+        working-directory: bagan-os/build
         run: |
           sudo lb config
           sudo lb build
       - uses: actions/upload-artifact@v4
         with:
           name: iso
-          path: myanmar-os/build/*.iso
+          path: bagan-os/build/*.iso
