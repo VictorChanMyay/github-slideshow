@@ -1,0 +1,17 @@
+task-xfce-desktop
+lightdm
+calamares
+firefox-esr
+libreoffice
+vlc
+fonts-noto-core
+fonts-noto-ui-core
+fonts-sil-padauk
+fcitx5
+fcitx5-m17n
+fcitx5-config-qt
+im-config
+locales
+hunspell
+tesseract-ocr
+tesseract-ocr-mya

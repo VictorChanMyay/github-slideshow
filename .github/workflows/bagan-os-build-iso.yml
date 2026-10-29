@@ -1,0 +1,34 @@
+name: Build ISO
+on:
+  workflow_dispatch:
+  push:
+    paths: ['bagan-os/build/**', '.github/workflows/bagan-os-build-iso.yml']
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # Build inside real Debian: Ubuntu's live-build is an old fork that breaks on Debian.
+    container:
+      image: debian:bookworm
+      options: --privileged
+    steps:
+      - name: Install tools
+        run: |
+          apt-get update
+          apt-get install -y git live-build debootstrap debian-archive-keyring xz-utils
+      - uses: actions/checkout@v4
+      - name: Check package names
+        run: |
+          apt-get update -qq
+          for p in $(grep -v '^#' bagan-os/build/config/package-lists/*.list.chroot); do
+            apt-cache show "$p" >/dev/null 2>&1 || { echo "MISSING PACKAGE: $p"; miss=1; }
+          done
+          [ -z "$miss" ]
+      - name: Build
+        working-directory: bagan-os/build
+        run: |
+          lb config
+          lb build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: iso
+          path: bagan-os/build/*.iso
