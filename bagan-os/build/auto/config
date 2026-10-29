@@ -1,10 +1,17 @@
 #!/bin/sh
-# Copy to build/auto/config (see README) or run directly: sudo ./auto-config
+# Run via `sudo lb config` from the build/ directory.
+# --mode debian is needed when building on Ubuntu (the CI runner),
+# otherwise live-build looks for "bookworm" on the Ubuntu mirror.
 lb config noauto \
+  --mode debian \
   --distribution bookworm \
   --architectures amd64 \
   --binary-images iso-hybrid \
   --debian-installer none \
+  --mirror-bootstrap http://deb.debian.org/debian/ \
+  --mirror-chroot http://deb.debian.org/debian/ \
+  --mirror-binary http://deb.debian.org/debian/ \
+  --security true \
   --bootappend-live "boot=live components locales=my_MM.UTF-8 keyboard-layouts=mm" \
   --archive-areas "main contrib non-free-firmware" \
   "${@}"

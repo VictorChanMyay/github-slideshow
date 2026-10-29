@@ -2,19 +2,22 @@ name: Build ISO
 on:
   workflow_dispatch:
   push:
-    paths: ['bagan-os/build/**']
+    paths: ['bagan-os/build/**', '.github/workflows/bagan-os-build-iso.yml']
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Install live-build
-        run: sudo apt-get update && sudo apt-get install -y live-build debootstrap
+        run: sudo apt-get update && sudo apt-get install -y live-build debootstrap debian-archive-keyring
       - name: Build
         working-directory: bagan-os/build
         run: |
           sudo lb config
           sudo lb build
+      - name: Show log on failure
+        if: failure()
+        run: sudo tail -n 60 bagan-os/build/chroot/debootstrap/debootstrap.log || true
       - uses: actions/upload-artifact@v4
         with:
           name: iso
