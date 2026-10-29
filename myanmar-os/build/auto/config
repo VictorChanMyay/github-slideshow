@@ -1,0 +1,10 @@
+#!/bin/sh
+# Copy to build/auto/config (see README) or run directly: sudo ./auto-config
+lb config noauto \
+  --distribution bookworm \
+  --architectures amd64 \
+  --binary-images iso-hybrid \
+  --debian-installer none \
+  --bootappend-live "boot=live components locales=my_MM.UTF-8 keyboard-layouts=mm" \
+  --archive-areas "main contrib non-free-firmware" \
+  "${@}"
