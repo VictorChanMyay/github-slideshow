@@ -9,7 +9,7 @@ Dear Mae Tao Clinic team,
 
 I am writing to this address because I do not know who the right person is. **Could you please forward this message to the person who looks after health information or IT, or tell me who that is?** Thank you.
 
-My name is [your name]. I teach IT at [school name] in Mae Sot, and I work legally in Thailand under my teaching visa. I admire the clinic's work for people from Myanmar, and I would like to contribute my skills as a volunteer, without payment.
+My name is Victor Chan. I teach IT at Sapphawitthayakhom School in Mae Sot, where I work legally under my teaching visa. I am also the person responsible for IT at FRP Thailand. I am writing as an individual volunteer, not on behalf of either organisation. I admire the clinic's work for people from Myanmar, and I would like to contribute my skills as a volunteer, without payment.
 
 To be clear about what this is: I am **not** applying for a job. I read about the clinic's search for a software developer and wanted to offer something different, in my own time.
 
@@ -22,9 +22,11 @@ I can come to the clinic or meet online, at a time that suits you. I can also se
 Thank you very much for considering this.
 
 Kind regards,
-[Name]
-[Position, school]
-[Phone / email]
+Victor Chan
+IT Teacher, Sapphawitthayakhom School, Mae Sot
+IT responsible, FRP Thailand
+Website: notesofvic.com
+[Phone] · [Your personal or school email]
 
 ---
 
@@ -34,6 +36,8 @@ Kind regards,
 - Never `Dear Sir/Madam`: it feels like a mass email.
 
 ## Notes before you send
+- **Send it from a personal or school address, not it@frpthailand.org.** An FRP address makes the clinic think FRP is making the offer. If FRP does support this, ask them in writing first.
+- **Check notesofvic.com before you share it:** it should open quickly, look professional, and contain nothing you would not want the clinic's leaders to read. It is shown once, in the signature, not in the body.
 - The recruitment address is usually read by HR, who are not the right people for this. The first paragraph asks them to forward it. If you hear nothing in a week, ask a friend or contact at the clinic for the right name, or call the clinic.
 - Check the facts in the email against what you can confirm: the job posting, who to address, your visa status wording (only what is true for you).
 - Do not promise dates, features or support after you leave; the meeting is for listening.
