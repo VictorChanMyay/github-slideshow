@@ -36,9 +36,10 @@ Design an Electronic Medical Record (EMR) for Mae Tao Clinic (MTC) that matches 
 - Patients are mostly displaced people and migrants, many without Thai ID. Implication: registration cannot depend on a national ID number.
 - Records are largely paper today. A university project (the "Digitize" project) has worked with the Reproductive Health Department since June 2019 on automated digitization of paper records, because off-the-shelf EMRs were judged not feasible in this setting. Data is held in a Health Information System (HIS); the software behind it is **[to confirm]**. Implication: learn from that project and integrate with the existing HIS rather than ignore it.
 
-**Logo and branding**
-- I could not find a description of the logo or its meaning in public sources, and the clinic's website could not be opened from this environment. **[to confirm]**
-- Action: ask the clinic (or download from their website) for the official logo files and brand guidelines. The prototype currently uses a neutral teal theme, not MTC branding.
+**Logo and branding** **[verified from the job description PDF]**
+- The logo is a caduceus: a green staff with two intertwined green serpents, topped by yellow-gold wings, with the words "MAE TAO CLINIC" beneath in dark text. The PDF also uses a faint copy as a page watermark.
+- Extracted copy: `emr-prototype/assets/mtc-logo.png` (low resolution, 126x121 px in the PDF). Ask the clinic for the original high-resolution file and brand guidelines before using it in the final proposal.
+- Brand colors to use in the EMR theme: green and gold from the logo, with dark text. The prototype still uses a neutral teal theme.
 
 ---
 
