@@ -1,4 +1,7 @@
 'use strict';
+// Friendly message instead of a confusing crash on an old Node.js (built-in SQLite needs 22.13 or newer)
+{ const [major, minor] = process.versions.node.split('.').map(Number);
+  if (major < 22 || (major === 22 && minor < 13)) { console.error(`This system needs Node.js 22.13 or newer. You have ${process.versions.node}.\nInstall the current LTS version from https://nodejs.org and try again.`); process.exit(1); } }
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -191,13 +194,20 @@ function createServer(db, opts = {}) {
 if (require.main === module) {
   const file = process.env.EMR_DB || path.join(__dirname, 'data', 'emr.db');
   const db = dbm.open(file);
-  const info = seed(db, { demo: process.env.EMR_DEMO === '1' });
-  const port = Number(process.env.PORT) || 3000;
-  const host = process.env.HOST || '127.0.0.1';
+  const arg = (name) => { const a = process.argv.find((x) => x.startsWith(`--${name}=`)); return a ? a.slice(name.length + 3) : undefined; };
+  const demo = process.env.EMR_DEMO === '1' || process.argv.includes('--demo'); // --demo works the same on Windows, macOS and Linux
+  const info = seed(db, { demo });
+  const port = Number(arg('port') || process.env.PORT) || 3000;
+  const host = arg('host') || process.env.HOST || '127.0.0.1';
   createServer(db, { secureCookies: process.env.EMR_SECURE === '1' }).listen(port, host, () => {
-    console.log(`EMR prototype running at http://${host}:${port}`);
-    if (info && info.demo_password) console.log(`DEMO MODE: fake data. Users: doctor1, nurse1, midwife1, pharm1, lab1, reg1, his1, prog1, admin  Password: ${info.demo_password}`);
-    if (info && info.admin_password) console.log(`First run. Sign in as "admin" with the one-time password: ${info.admin_password}  (you must change it)`);
+    console.log(`\nEMR prototype is running.\nOpen this address in your browser:  http://localhost:${port}   (or http://127.0.0.1:${port})\nPress Ctrl+C to stop.\n`);
+    if (info && info.demo_password) console.log(`DEMO MODE: fake data only. Users: doctor1, nurse1, midwife1, pharm1, lab1, reg1, his1, prog1, admin\nPassword for all of them: ${info.demo_password}\n`);
+    else if (demo) console.log('DEMO MODE (using the existing database in data/emr.db). To start again from scratch, stop the server and delete data/emr.db.\n');
+    if (info && info.admin_password) console.log(`First run. Sign in as "admin" with the one-time password: ${info.admin_password}  (you must change it)\n`);
+  }).on('error', (e) => {
+    if (e.code === 'EADDRINUSE') console.error(`Port ${port} is already in use. Close the other copy, or start on another port:  node server.js --demo --port=3001`);
+    else console.error(e.message);
+    process.exit(1);
   });
 }
 module.exports = { createServer };

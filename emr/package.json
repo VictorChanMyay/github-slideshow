@@ -6,7 +6,7 @@
   "engines": { "node": ">=22.13" },
   "scripts": {
     "start": "node server.js",
-    "demo": "EMR_DEMO=1 node server.js",
+    "demo": "node server.js --demo",
     "test": "node --test --no-warnings test/m1.test.js test/m2.test.js test/m3.test.js test/m4.test.js test/m5.test.js test/m6.test.js test/maternal.test.js test/programs_rules.test.js test/growth.test.js test/immunization.test.js test/clinical.test.js test/i18n.test.js",
     "i18n:report": "node tools/i18n-report.js"
   }

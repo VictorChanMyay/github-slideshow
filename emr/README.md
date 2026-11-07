@@ -63,12 +63,23 @@ A working, multi-user electronic medical record prototype for a community clinic
 
 **Needs clinical review before real use:** alert thresholds (`lib/clinical.js`), the ICD-10 subset (`lib/icd10.js`), and who may sign visits (midwives are allowed here; confirm).
 
+## Quick start on your own computer (Windows, macOS or Linux)
+1. **Install Node.js** (the current LTS version) from https://nodejs.org. Check it with `node -v` (it must say 22.13 or higher).
+2. **Get the code:** `git clone --branch claude/hopeful-albattani-2ur1zv https://github.com/victorchanmyay/github-slideshow.git`, or download the branch as a ZIP from GitHub and unzip it.
+3. **Start the demo:** open the `emr` folder and
+   - **Windows:** double-click `start-demo.bat`
+   - **macOS / Linux:** run `sh start-demo.sh`
+   - or, in any terminal inside the `emr` folder: `node server.js --demo`
+4. **Open http://localhost:3000** in your browser and sign in with `doctor1` and the password `demo-pass-12345` (other users: `nurse1 midwife1 pharm1 lab1 reg1 his1 prog1 admin`).
+
+It uses fake data only and keeps everything in the file `data/emr.db`. To start again from scratch, stop the server (Ctrl+C) and delete that file. If port 3000 is busy, add `--port=3001`.
+
 ## Run it
 Needs Node.js 22.13 or newer. No packages to install.
 
 ```
 cd emr
-npm run demo        # fake data + demo users, http://127.0.0.1:3000
+npm run demo        # fake data + demo users, http://localhost:3000 (same as: node server.js --demo)
 npm test            # automated tests
 ```
 Try this flow: sign in as `reg1` and check in a patient, then `nurse1` (triage), then `doctor1` (consult, diagnose, sign).
