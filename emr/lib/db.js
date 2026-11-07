@@ -98,6 +98,57 @@ const MIGRATIONS = [
   );
   CREATE INDEX problems_pid ON problems(patient_id);
   `,
+  // 3: lab, formulary, prescribing, dispensing, stock
+  `
+  CREATE TABLE lab_tests(
+    id INTEGER PRIMARY KEY, code TEXT UNIQUE NOT NULL, name TEXT NOT NULL, kind TEXT NOT NULL CHECK(kind IN ('numeric','qualitative')),
+    unit TEXT, ref_low REAL, ref_high REAL, crit_low REAL, crit_high REAL, options TEXT, abnormal TEXT,
+    sensitive INTEGER NOT NULL DEFAULT 0, adult_only INTEGER NOT NULL DEFAULT 0,
+    ref_low_m REAL, ref_high_m REAL, ref_low_f REAL, ref_high_f REAL, active INTEGER NOT NULL DEFAULT 1
+  );
+  CREATE TABLE lab_orders(
+    id INTEGER PRIMARY KEY, encounter_id INTEGER NOT NULL REFERENCES encounters(id), patient_id INTEGER NOT NULL REFERENCES patients(id),
+    test_id INTEGER NOT NULL REFERENCES lab_tests(id), priority TEXT NOT NULL DEFAULT 'routine' CHECK(priority IN ('routine','urgent')),
+    status TEXT NOT NULL DEFAULT 'ordered' CHECK(status IN ('ordered','collected','resulted','cancelled')),
+    ordered_by INTEGER REFERENCES users(id), ordered_at TEXT NOT NULL DEFAULT (datetime('now')),
+    collected_by INTEGER REFERENCES users(id), collected_at TEXT,
+    result_value TEXT, result_flag TEXT, result_comment TEXT, resulted_by INTEGER REFERENCES users(id), resulted_at TEXT,
+    amended INTEGER NOT NULL DEFAULT 0, cancel_reason TEXT
+  );
+  CREATE INDEX lab_orders_enc ON lab_orders(encounter_id);
+  CREATE INDEX lab_orders_status ON lab_orders(status);
+  CREATE TABLE lab_result_history(
+    id INTEGER PRIMARY KEY, order_id INTEGER NOT NULL REFERENCES lab_orders(id), old_value TEXT, new_value TEXT, reason TEXT NOT NULL,
+    by_user INTEGER REFERENCES users(id), at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE drugs(
+    id INTEGER PRIMARY KEY, name TEXT NOT NULL, strength TEXT NOT NULL, form TEXT NOT NULL, class TEXT, tags TEXT,
+    reorder_level INTEGER NOT NULL DEFAULT 0, active INTEGER NOT NULL DEFAULT 1, UNIQUE(name, strength, form)
+  );
+  CREATE TABLE prescriptions(
+    id INTEGER PRIMARY KEY, encounter_id INTEGER NOT NULL REFERENCES encounters(id), patient_id INTEGER NOT NULL REFERENCES patients(id),
+    drug_id INTEGER NOT NULL REFERENCES drugs(id), dose TEXT NOT NULL, frequency TEXT NOT NULL, duration_days INTEGER NOT NULL, quantity INTEGER NOT NULL,
+    instructions TEXT, status TEXT NOT NULL DEFAULT 'prescribed' CHECK(status IN ('prescribed','partial','dispensed','cancelled')),
+    allergy_override_reason TEXT, duplicate_confirmed INTEGER NOT NULL DEFAULT 0, cancel_reason TEXT,
+    prescribed_by INTEGER REFERENCES users(id), prescribed_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX rx_enc ON prescriptions(encounter_id);
+  CREATE INDEX rx_status ON prescriptions(status);
+  CREATE TABLE stock_batches(
+    id INTEGER PRIMARY KEY, drug_id INTEGER NOT NULL REFERENCES drugs(id), batch_no TEXT NOT NULL, expiry TEXT NOT NULL,
+    qty_received INTEGER NOT NULL, qty_on_hand INTEGER NOT NULL CHECK(qty_on_hand >= 0), source TEXT,
+    received_by INTEGER REFERENCES users(id), received_at TEXT NOT NULL DEFAULT (datetime('now')), UNIQUE(drug_id, batch_no, expiry)
+  );
+  CREATE TABLE stock_movements(
+    id INTEGER PRIMARY KEY, drug_id INTEGER NOT NULL REFERENCES drugs(id), batch_id INTEGER REFERENCES stock_batches(id),
+    type TEXT NOT NULL CHECK(type IN ('receive','dispense','adjust','writeoff')), qty INTEGER NOT NULL, reference TEXT, reason TEXT,
+    by_user INTEGER REFERENCES users(id), at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE dispensing(
+    id INTEGER PRIMARY KEY, prescription_id INTEGER NOT NULL REFERENCES prescriptions(id), batch_id INTEGER NOT NULL REFERENCES stock_batches(id),
+    qty INTEGER NOT NULL CHECK(qty > 0), by_user INTEGER REFERENCES users(id), at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  `,
 ];
 
 function open(file) {
@@ -126,10 +177,20 @@ function migrate(db) {
 }
 
 function seedReference(db) {
-  const n = db.prepare('SELECT COUNT(*) c FROM icd10').get().c;
-  if (n > 0) return;
-  const ins = db.prepare('INSERT INTO icd10(code,name) VALUES(?,?)');
-  tx(db, () => { for (const [c, name] of require('./icd10')) ins.run(c, name); });
+  if (db.prepare('SELECT COUNT(*) c FROM icd10').get().c === 0) {
+    const ins = db.prepare('INSERT INTO icd10(code,name) VALUES(?,?)');
+    tx(db, () => { for (const [c, name] of require('./icd10')) ins.run(c, name); });
+  }
+  const { DRUGS, LABS } = require('./formulary_seed');
+  if (db.prepare('SELECT COUNT(*) c FROM drugs').get().c === 0) {
+    const ins = db.prepare('INSERT INTO drugs(name,strength,form,class,tags,reorder_level) VALUES(?,?,?,?,?,?)');
+    tx(db, () => { for (const d of DRUGS) ins.run(...d); });
+  }
+  if (db.prepare('SELECT COUNT(*) c FROM lab_tests').get().c === 0) {
+    const ins = db.prepare(`INSERT INTO lab_tests(code,name,kind,unit,ref_low,ref_high,crit_low,crit_high,options,abnormal,sensitive,adult_only,ref_low_m,ref_high_m,ref_low_f,ref_high_f)
+      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+    tx(db, () => { for (const l of LABS) { const row = l.slice(); while (row.length < 16) row.push(null); ins.run(...row); } });
+  }
 }
 
 // Run fn inside a transaction (rolls back on throw).

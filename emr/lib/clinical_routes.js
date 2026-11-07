@@ -1,5 +1,6 @@
 'use strict';
 const enc = require('./encounters');
+const visit = require('./visit');
 const audit = require('./audit');
 const { can } = require('./permissions');
 
@@ -68,31 +69,31 @@ function handle(ctx) {
     const open = () => { const e = enc.encounterRow(db, id); const p = enc.needPatient(db, e.patient_id); enc.gate(db, user, p); return e; };
     if (!sub && method === 'GET') {
       if (!need('encounter.read')) return true;
-      return run(() => { const e = open(); log('encounter_viewed', e.patient_id, String(id)); send(res, 200, enc.getEncounter(db, id)); });
+      return run(() => { const e = open(); const v = visit.getVisit(db, user, id); log('encounter_viewed', e.patient_id, String(id)); if (v.lab_orders.some((o) => o.sensitive && o.status === 'resulted' && !o.hidden)) log('sensitive_result_viewed', e.patient_id, String(id)); send(res, 200, v); });
     }
     if (sub === 'vitals' && method === 'PUT') {
       if (!need('triage.write')) return true;
-      return run(() => { const e = open(); enc.saveVitals(db, user, id, body); log('vitals_saved', e.patient_id, String(id)); send(res, 200, enc.getEncounter(db, id)); });
+      return run(() => { const e = open(); enc.saveVitals(db, user, id, body); log('vitals_saved', e.patient_id, String(id)); send(res, 200, visit.getVisit(db, user, id)); });
     }
     if (sub === 'notes' && method === 'PUT') {
       if (!need('consult.write')) return true;
-      return run(() => { const e = open(); enc.saveNotes(db, user, id, body); log('notes_saved', e.patient_id, String(id)); send(res, 200, enc.getEncounter(db, id)); });
+      return run(() => { const e = open(); enc.saveNotes(db, user, id, body); log('notes_saved', e.patient_id, String(id)); send(res, 200, visit.getVisit(db, user, id)); });
     }
     if (sub === 'diagnoses' && method === 'POST') {
       if (!need('consult.write')) return true;
-      return run(() => { const e = open(); const r = enc.addDiagnosis(db, user, id, body); log('diagnosis_added', e.patient_id, `${id}: ${r.code}`); send(res, 200, enc.getEncounter(db, id)); });
+      return run(() => { const e = open(); const r = enc.addDiagnosis(db, user, id, body); log('diagnosis_added', e.patient_id, `${id}: ${r.code}`); send(res, 200, visit.getVisit(db, user, id)); });
     }
     if (sub === 'diagnoses' && sid && method === 'DELETE') {
       if (!need('consult.write')) return true;
-      return run(() => { const e = open(); enc.removeDiagnosis(db, id, sid); log('diagnosis_removed', e.patient_id, `${id}: ${sid}`); send(res, 200, enc.getEncounter(db, id)); });
+      return run(() => { const e = open(); enc.removeDiagnosis(db, id, sid); log('diagnosis_removed', e.patient_id, `${id}: ${sid}`); send(res, 200, visit.getVisit(db, user, id)); });
     }
     if (sub === 'sign' && method === 'POST') {
       if (!need('consult.sign')) return true;
-      return run(() => { const e = open(); enc.sign(db, user, id); log('encounter_signed', e.patient_id, String(id)); send(res, 200, enc.getEncounter(db, id)); });
+      return run(() => { const e = open(); enc.sign(db, user, id); log('encounter_signed', e.patient_id, String(id)); send(res, 200, visit.getVisit(db, user, id)); });
     }
     if (sub === 'addendum' && method === 'POST') {
       if (!need('consult.sign')) return true;
-      return run(() => { const e = open(); enc.addAddendum(db, user, id, body); log('addendum_added', e.patient_id, String(id)); send(res, 200, enc.getEncounter(db, id)); });
+      return run(() => { const e = open(); enc.addAddendum(db, user, id, body); log('addendum_added', e.patient_id, String(id)); send(res, 200, visit.getVisit(db, user, id)); });
     }
     if (sub === 'cancel' && method === 'POST') {
       if (!needAny('encounter.checkin', 'consult.write')) return true;

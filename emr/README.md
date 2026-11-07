@@ -1,6 +1,6 @@
 # Clinic EMR (volunteer prototype)
 
-A working, multi-user electronic medical record prototype for a community clinic. **Demo data only. Do not enter real patient information.** See `PLAN.md` for the full roadmap (10 milestones). Milestones **M1 (foundation)** and **M2 (outpatient core)** are done.
+A working, multi-user electronic medical record prototype for a community clinic. **Demo data only. Do not enter real patient information.** See `PLAN.md` for the full roadmap (10 milestones). Milestones **M1 (foundation)**, **M2 (outpatient core)** and **M3 (lab, prescribing, dispensing, stock)** are done.
 
 ## What works now (M1)
 - Sign-in with roles (doctor, nurse, midwife, pharmacist, lab, registration, HIS, program officer, admin); lockout after 5 failed attempts; forced password change for new users
@@ -18,6 +18,16 @@ A working, multi-user electronic medical record prototype for a community clinic
 - Printable patient summary
 - Restricted records: after a reason is given, access lasts 60 minutes for that user and covers visits, allergies and summaries; the queue never shows a restricted patient's name
 - Roles: nurse does triage, doctor/midwife consult and sign, registration clerks check patients in but see no clinical data
+
+## Added in M3 (lab, medicines, stock)
+- **Lab:** doctors and midwives order tests inside a visit; nurses or lab staff mark the specimen collected; lab staff enter results. Qualitative tests use fixed options; numeric results are flagged normal / abnormal / critical / invalid. Amending a result needs a reason and keeps the old value in a history table. Results never go into the audit log, only the flag.
+- **Sensitive tests (HIV, hepatitis B, syphilis):** the result is hidden from roles without permission (nurse, HIS, pharmacist, admin), and every time someone views a sensitive result it is logged.
+- **Prescribing:** from a draft medicine list. The system **never calculates doses**; the prescriber types dose, frequency, duration and quantity. It blocks on a possible allergy match (needs a typed reason, stored with the prescription and shown to the pharmacist) and asks for confirmation on duplicate medicines or groups.
+- **Dispensing:** first-expiry-first-out across batches, **expired stock is never dispensed**, partial dispensing is supported, and a failed dispense changes nothing (it runs as one transaction). Cancelling is only possible before dispensing.
+- **Stock:** batches with expiry, receive (expired batches refused), adjust and write-off (reason required, never below zero), low-stock and expiry alerts, and a movement log. Admins can add medicines to the list.
+- **Restricted patients:** lab and pharmacy staff can process the *task* (by MRN, name hidden) without opening the patient's record. This is a design decision the clinic should confirm.
+
+**Needs clinical review before real use (M3):** the starter medicine list and allergy words (`lib/formulary_seed.js`), lab menu and reference ranges, which tests count as sensitive, and the rule that numeric tests are not interpreted for children under 12 until the clinic adds child ranges.
 
 **Needs clinical review before real use:** alert thresholds (`lib/clinical.js`), the ICD-10 subset (`lib/icd10.js`), and who may sign visits (midwives are allowed here; confirm).
 

@@ -182,6 +182,8 @@ function encounterView() {
     !locked && can('consult.write') ? h('div', {}, h('div', { class: 'row' }, kind, cert),
       icdPicker(async (c) => { if (await reload(await api('POST', `/api/encounters/${e.id}/diagnoses`, { code: c.code, kind: kind.value, certainty: cert.value }))) redraw(); }), h('p', { class: 'note' }, t('dx.draftnote'))) : null));
 
+  root.append(...ordersPanels(E, e, locked, reload, redraw));
+
   /* sign / cancel / addenda */
   if (!locked) {
     root.append(h('div', { class: 'row' },

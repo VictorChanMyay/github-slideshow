@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const dir = path.join(__dirname, '..', 'public');
 const en = JSON.parse(fs.readFileSync(path.join(dir, 'i18n', 'en.json'), 'utf8'));
-const src = ['app.js', 'clinical.js'].map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
+const src = ['app.js', 'clinical.js', 'orders.js'].map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
 
 test('every literal t("key") used in the screens exists in English', () => {
   const keys = [...src.matchAll(/\bt\('([A-Za-z0-9_.]+)'\)/g)].map((m) => m[1]);
@@ -17,6 +17,17 @@ test('every dynamic t("prefix." + value) prefix has entries', () => {
   const prefixes = [...new Set([...src.matchAll(/\bt\('([A-Za-z0-9_.]+\.)' \+/g)].map((m) => m[1]))];
   assert.ok(prefixes.length > 5);
   for (const p of prefixes) assert.ok(Object.keys(en).some((k) => k.startsWith(p)), p);
+});
+test('view titles and navigation labels have text', () => {
+  const app = fs.readFileSync(path.join(dir, 'app.js'), 'utf8');
+  const titles = [...app.matchAll(/\b\w+: \['([a-z]+\.[a-z_]+)',/g)].map((m) => m[1]);
+  const navs = [...app.matchAll(/'(nav\.[a-z]+)'/g)].map((m) => m[1]);
+  assert.ok(titles.length >= 9 && navs.length >= 7);
+  for (const k of [...titles, ...navs]) assert.ok(k in en, k);
+});
+test('server enum values shown in the UI have text (lab flags, statuses, stock types)', () => {
+  for (const k of ['lab.flag.normal', 'lab.flag.abnormal', 'lab.flag.critical', 'lab.flag.invalid', 'lab.flag.not_assessed', 'lab.status.ordered', 'lab.status.collected', 'lab.status.resulted', 'lab.status.cancelled',
+    'rx.status.prescribed', 'rx.status.partial', 'rx.status.dispensed', 'rx.status.cancelled', 'stock.type.receive', 'stock.type.dispense', 'stock.type.adjust', 'stock.type.writeoff', 'lab.tab.ordered', 'lab.tab.collected', 'lab.tab.resulted', 'rx.tab.pending', 'rx.tab.done']) assert.ok(k in en, k);
 });
 test('flag, vital and error codes from the server all have text', () => {
   const clinical = fs.readFileSync(path.join(__dirname, '..', 'lib', 'clinical.js'), 'utf8');

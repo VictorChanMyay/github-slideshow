@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "demo": "EMR_DEMO=1 node server.js",
-    "test": "node --test --no-warnings test/m1.test.js test/m2.test.js test/clinical.test.js test/i18n.test.js",
+    "test": "node --test --no-warnings test/m1.test.js test/m2.test.js test/m3.test.js test/clinical.test.js test/i18n.test.js",
     "i18n:report": "node tools/i18n-report.js"
   }
 }
