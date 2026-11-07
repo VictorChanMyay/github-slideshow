@@ -38,9 +38,11 @@ async function openPatient(pid) {
   if (r.status === 403) { alert(t('restricted.denied')); return; }
   if (!r.ok) { if (r.status !== 428) oops(r); return; }
   state.patient = r.data.patient; state.clinical = r.data.allergies ? { allergies: r.data.allergies, problems: r.data.problems, encounters: r.data.encounters } : null; // clerks get no clinical data
+  state.child = null;
+  if (can('child.read')) { await loadChildMeta(); const cr = await withAccess(pid, () => api('GET', `/api/patients/${pid}/child`)); if (cr.ok && cr.data.is_child) state.child = cr.data; }
   state.mch = null;
   if (can('mch.read')) await loadMchMeta();
-  if (can('mch.read') && r.data.patient.sex !== 'M') { const m = await withAccess(pid, () => api('GET', `/api/patients/${pid}/mch`)); if (m.ok) state.mch = m.data; }
+  if (can('mch.read') && r.data.patient.sex !== 'M' && (Date.now() - new Date(r.data.patient.dob + 'T00:00:00Z')) / 31557600000 >= 10) { const m = await withAccess(pid, () => api('GET', `/api/patients/${pid}/mch`)); if (m.ok) state.mch = m.data; }
   state.view = 'detail'; render();
 }
 async function openEncounter(id, pid) {
@@ -163,6 +165,7 @@ function encounterView() {
       if (r.status === 400 && r.data.errors) { vitErr.textContent = Object.entries(r.data.errors).map(([k, v]) => `${t('vital.' + k)}: ${t('verr.' + v)}`).join(' · '); return; }
       if (await reload(r)) { draft.vit = null; redraw(); }
     } }, t('triage.save'))) : null,
+    can('growth.write') && p.age_months < 19 * 12 && E.vitals && (E.vitals.weight != null || E.vitals.height != null || E.vitals.muac != null) && !locked ? h('div', { class: 'row' }, h('button', { class: 'sm', onclick: () => growthDialog({ id: p.id, name_en: p.name_en }, { encounter_id: e.id, weight_kg: E.vitals.weight, length_cm: E.vitals.height, muac_cm: E.vitals.muac }) }, t('child.save_visit'))) : null,
     h('p', { class: 'note' }, t('triage.draftnote'))));
 
   /* consultation */

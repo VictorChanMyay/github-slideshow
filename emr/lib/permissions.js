@@ -28,17 +28,21 @@ const P = {
   'mch.read': 'View antenatal, delivery, newborn and postnatal records',
   'mch.write': 'Record antenatal visits, deliveries, labour observations and postnatal visits',
   'fp.write': 'Record family planning visits',
+  'child.read': 'View child immunization and growth records',
+  'imm.write': 'Record and void vaccinations',
+  'growth.write': 'Record growth measurements',
+  'imm.admin': 'Edit the immunization schedule',
 };
 const ROLES = {
-  doctor: ['patient.read', 'patient.write', 'patient.restricted', 'queue.read', 'encounter.read', 'encounter.checkin', 'triage.write', 'consult.write', 'consult.sign', 'allergy.write', 'problem.write', 'lab.order', 'lab.read', 'lab.sensitive', 'rx.write', 'rx.read', 'stock.read', 'mch.read', 'mch.write', 'fp.write'],
-  nurse: ['patient.read', 'patient.write', 'queue.read', 'encounter.read', 'encounter.checkin', 'triage.write', 'allergy.write', 'lab.read', 'lab.collect', 'rx.read', 'stock.read', 'mch.read', 'fp.write'],
-  midwife: ['patient.read', 'patient.write', 'queue.read', 'encounter.read', 'encounter.checkin', 'triage.write', 'consult.write', 'consult.sign', 'allergy.write', 'problem.write', 'lab.order', 'lab.read', 'lab.collect', 'lab.sensitive', 'rx.write', 'rx.read', 'stock.read', 'mch.read', 'mch.write', 'fp.write'],
+  doctor: ['patient.read', 'patient.write', 'patient.restricted', 'queue.read', 'encounter.read', 'encounter.checkin', 'triage.write', 'consult.write', 'consult.sign', 'allergy.write', 'problem.write', 'lab.order', 'lab.read', 'lab.sensitive', 'rx.write', 'rx.read', 'stock.read', 'mch.read', 'mch.write', 'fp.write', 'child.read', 'imm.write', 'growth.write'],
+  nurse: ['patient.read', 'patient.write', 'queue.read', 'encounter.read', 'encounter.checkin', 'triage.write', 'allergy.write', 'lab.read', 'lab.collect', 'rx.read', 'stock.read', 'mch.read', 'fp.write', 'child.read', 'imm.write', 'growth.write'],
+  midwife: ['patient.read', 'patient.write', 'queue.read', 'encounter.read', 'encounter.checkin', 'triage.write', 'consult.write', 'consult.sign', 'allergy.write', 'problem.write', 'lab.order', 'lab.read', 'lab.collect', 'lab.sensitive', 'rx.write', 'rx.read', 'stock.read', 'mch.read', 'mch.write', 'fp.write', 'child.read', 'imm.write', 'growth.write'],
   pharmacist: ['patient.read', 'encounter.read', 'rx.read', 'rx.dispense', 'stock.read', 'stock.write'],
   lab: ['patient.read', 'lab.read', 'lab.collect', 'lab.result', 'lab.sensitive'],
   registration: ['patient.read', 'patient.write', 'queue.read', 'encounter.checkin'],
-  his: ['patient.read', 'patient.write', 'patient.restricted', 'audit.read', 'queue.read', 'encounter.read', 'lab.read', 'rx.read', 'stock.read', 'mch.read'],
-  program: ['patient.read', 'patient.restricted', 'encounter.read', 'lab.read', 'lab.sensitive', 'mch.read'],
-  admin: ['patient.read', 'patient.write', 'patient.restricted', 'audit.read', 'user.admin', 'queue.read', 'encounter.read', 'encounter.checkin', 'triage.write', 'consult.write', 'consult.sign', 'allergy.write', 'problem.write', 'lab.read', 'rx.read', 'stock.read', 'stock.write', 'formulary.admin', 'mch.read'],
+  his: ['patient.read', 'patient.write', 'patient.restricted', 'audit.read', 'queue.read', 'encounter.read', 'lab.read', 'rx.read', 'stock.read', 'mch.read', 'child.read'],
+  program: ['patient.read', 'patient.restricted', 'encounter.read', 'lab.read', 'lab.sensitive', 'mch.read', 'child.read'],
+  admin: ['patient.read', 'patient.write', 'patient.restricted', 'audit.read', 'user.admin', 'queue.read', 'encounter.read', 'encounter.checkin', 'triage.write', 'consult.write', 'consult.sign', 'allergy.write', 'problem.write', 'lab.read', 'rx.read', 'stock.read', 'stock.write', 'formulary.admin', 'mch.read', 'child.read', 'imm.admin'],
 };
 const can = (role, perm) => (ROLES[role] || []).includes(perm);
 module.exports = { P, ROLES, can };

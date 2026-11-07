@@ -174,5 +174,19 @@
 "mch.status.active": "ကိုယ်ဝန်ရှိနေဆဲ",
 "mch.status.delivered": "မီးဖွားပြီး",
 "mch.fpm.condom": "ကွန်ဒုံး",
-"mch.fpm.injectable": "ဆေးထိုး"
+"mch.fpm.injectable": "ဆေးထိုး",
+"nav.child": "ကလေးကျန်းမာရေး",
+"nav.schedule": "ကာကွယ်ဆေးအချိန်ဇယား",
+"child.immunization": "ကာကွယ်ဆေး",
+"child.growth": "ကြီးထွားမှုနှင့် အာဟာရ",
+"child.weight": "ကိုယ်အလေးချိန် (kg)",
+"child.date": "ရက်စွဲ",
+"child.record_dose": "ကာကွယ်ဆေးမှတ်တမ်းတင်ရန်",
+"child.record_growth": "တိုင်းတာမှု မှတ်တမ်းတင်ရန်",
+"child.imm.status.done": "ထိုးပြီး",
+"child.imm.status.due": "ထိုးရမည့်အချိန်",
+"child.imm.status.overdue": "နောက်ကျနေ",
+"child.imm.status.upcoming": "လာမည့်",
+"child.tab.immunization": "ထိုးရန်ကျန်သူများ",
+"child.tab.nutrition": "အာဟာရ"
 }

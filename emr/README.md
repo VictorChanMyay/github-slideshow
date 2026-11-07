@@ -1,6 +1,6 @@
 # Clinic EMR (volunteer prototype)
 
-A working, multi-user electronic medical record prototype for a community clinic. **Demo data only. Do not enter real patient information.** See `PLAN.md` for the full roadmap (10 milestones). Milestones **M1 (foundation)**, **M2 (outpatient core)** and **M3 (lab, prescribing, dispensing, stock)** and **M4 (maternal and child health)** are done.
+A working, multi-user electronic medical record prototype for a community clinic. **Demo data only. Do not enter real patient information.** See `PLAN.md` for the full roadmap (10 milestones). Milestones **M1 (foundation)**, **M2 (outpatient core)** and **M3 (lab, prescribing, dispensing, stock)** **M4 (maternal and child health)** and **M5 (child health)** are done.
 
 ## What works now (M1)
 - Sign-in with roles (doctor, nurse, midwife, pharmacist, lab, registration, HIS, program officer, admin); lockout after 5 failed attempts; forced password change for new users
@@ -35,6 +35,16 @@ A working, multi-user electronic medical record prototype for a community clinic
 - **Postnatal care:** mother and baby danger signs and alerts, and the four contact windows (day 0-1, day 3, day 7-14, week 6) with missed or due contacts in the register.
 - **Family planning:** methods and visits, a pregnancy check before starting most methods, a block for active pregnancy, safety warnings for the combined pill (raised blood pressure or hypertension, first 6 weeks after delivery), and an automatic reminder date for injectables (84 days, editable). The register lists overdue clients first.
 - **Registers (Maternal & child):** antenatal (alerts first), postnatal (missed or due contacts first) and family planning (overdue first). Restricted patients appear by MRN only.
+
+## Added in M5 (child health)
+- **Immunization schedule:** a table of vaccines and doses (age due, minimum age, minimum interval, maximum age, "late after"), shown per child as done / due / overdue / upcoming / waiting for an earlier dose / past the maximum age. The seeded schedule is a **draft in the style of the WHO EPI** (BCG, hepatitis B birth dose, OPV, pentavalent, PCV, rotavirus, IPV, measles-containing). An admin can edit every number on the "Immunization schedule" screen, and changes apply to all children at once.
+- **Recording doses:** a dose given too early or too soon after the previous one (4-day grace period) is refused unless recorded as an **invalid dose**, which does not count, so the dose becomes due again. Doses given elsewhere can be entered from the vaccination card in any order. A dose can be removed with a reason. Birth doses noted at delivery become immunization records automatically.
+- **Growth and nutrition:** weight, length or height, head circumference, MUAC and oedema. **WHO Child Growth Standards 2006 z-scores** (weight-, height-, weight-for-height, BMI- and head-circumference-for-age, 0 to 60 months) with WHO's adjustment beyond +/-3 and the lying/standing 0.7 cm correction. Flags: severe and moderate acute malnutrition (weight-for-height, MUAC from 6 months, bilateral oedema), stunting, underweight, overweight, obesity, implausible values, weight loss and falling weight-for-age between visits.
+- **Charts:** weight-, height-, weight-for-height, BMI- and head-circumference charts drawn from the WHO curves with the child's points.
+- **Registers (Child health):** children with vaccines due or overdue (most overdue first) and children with a nutrition flag at their latest measurement (severe first). Restricted children appear by MRN only.
+- **Data source and checks:** the WHO tables come from the data files of the open-source `pygrowup` package (see `NOTICE.md` and `tools/build_who_tables.py`). The tests check my calculation against **every published reference value in all 8 tables (more than 3,000 comparisons)** and against WHO medians I know independently.
+
+**Needs clinical review before real use (M5):** the immunization schedule (which plan the clinic follows: Thai, Myanmar or WHO), maximum ages and intervals, the nutrition classification rules in `lib/growth.js`, and the MUAC cut-offs. Limits: ages between months are interpolated (WHO software uses daily tables, so tiny differences are possible); there is no standard for children over 5 years; vaccine stock and contraindication screening are not modelled; SAM and MAM treatment programme registers come in Milestone 6.
 
 **Needs clinical review before real use (M4):** every threshold and schedule in `lib/maternal.js` (blood pressure, haemoglobin, fundal height, fetal heart rate, contact weeks, postnatal windows, injectable interval), which risk factors and complications to list, the rule that deliveries before 20 weeks are recorded as miscarriages, and which roles may record deliveries. The newborn's birth vaccines are only noted as given; Milestone 5 will turn them into immunization records.
 

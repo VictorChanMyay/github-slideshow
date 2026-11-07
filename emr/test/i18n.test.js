@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const dir = path.join(__dirname, '..', 'public');
 const en = JSON.parse(fs.readFileSync(path.join(dir, 'i18n', 'en.json'), 'utf8'));
-const src = ['app.js', 'clinical.js', 'orders.js', 'mch.js'].map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
+const src = ['app.js', 'clinical.js', 'orders.js', 'mch.js', 'child.js'].map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
 
 test('every literal t("key") used in the screens exists in English', () => {
   const keys = [...src.matchAll(/\bt\('([A-Za-z0-9_.]+)'\)/g)].map((m) => m[1]);
@@ -59,4 +59,16 @@ test('every maternal option, alert and window from the server has text', () => {
   assert.ok(codes.size > 25);
   for (const c of codes) assert.ok(`mch.alert.${c}` in en, `mch.alert.${c}`);
   for (const s of M.DANGER_SIGNS) assert.ok(`mch.alert.danger.${s}` in en); for (const s of M.MOTHER_DANGER) assert.ok(`mch.alert.mother.${s}` in en); for (const s of M.BABY_DANGER) assert.ok(`mch.alert.baby.${s}` in en);
+});
+
+test('every child-health flag, status and reason from the server has text', () => {
+  const g = fs.readFileSync(path.join(__dirname, '..', 'lib', 'growth.js'), 'utf8'); const c = fs.readFileSync(path.join(__dirname, '..', 'lib', 'child.js'), 'utf8');
+  const flags = new Set([...g.matchAll(/add\('([a-z_]+)'/g)].map((m) => m[1]).concat([...c.matchAll(/code: '([a-z_]+)'/g)].map((m) => m[1])));
+  assert.ok(flags.size >= 18);
+  for (const f of flags) assert.ok(`child.flag.${f}` in en, `child.flag.${f}`);
+  for (const s of ['done', 'due', 'overdue', 'upcoming', 'blocked', 'too_late']) assert.ok(`child.imm.status.${s}` in en, s);
+  for (const r of ['too_young', 'too_soon']) assert.ok(`child.invalid.${r}` in en, r);
+  for (const k of ['waz', 'haz', 'whz', 'baz', 'hcz']) assert.ok(`child.z.${k}` in en, k);
+  for (const k of ['wfa', 'hfa', 'wfh', 'bfa', 'hcfa']) assert.ok(`child.chart.${k}` in en, k);
+  for (const k of ['given_here', 'card', 'birth_record']) assert.ok(`child.source.${k}` in en, k);
 });

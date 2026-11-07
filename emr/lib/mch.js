@@ -3,6 +3,7 @@ const { tx } = require('./db');
 const { HttpError, encounterRow } = require('./encounters');
 const patients = require('./patients');
 const M = require('./maternal');
+const imm = require('./immunization');
 
 const text = (v, max = 500) => (v == null ? '' : String(v).trim().slice(0, max));
 const j = (v) => JSON.stringify(v);
@@ -177,6 +178,7 @@ function recordDelivery(db, user, epId, input) {
       let pid = null, mrn = null;
       if (b.live) { const baby = patients.createBaby(db, mother, { sex: b.sex, dob: on, label: nbs.length > 1 ? String.fromCharCode(65 + i) : null }, user); pid = baby.id; mrn = baby.mrn; }
       const n = b.n;
+      if (b.live) imm.recordBirthDoses(db, user, pid, on, n); // birth vaccines noted at delivery become immunization records
       const nid = Number(db.prepare(`INSERT INTO newborns(delivery_id,birth_order,outcome,patient_id,sex,birth_weight_g,apgar1,apgar5,resuscitation,breastfed_within_hour,skin_to_skin,vitamin_k,bcg_given,opv0_given,hepb0_given,referred,notes)
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(d, i + 1, b.out, pid, b.sex, b.w, b.a1, b.a5, bool(n.resuscitation), bool(n.breastfed_within_hour), bool(n.skin_to_skin), bool(n.vitamin_k), bool(n.bcg_given), bool(n.opv0_given), bool(n.hepb0_given), bool(n.referred), text(n.notes)).lastInsertRowid);
       out.push({ id: nid, patient_id: pid, mrn, outcome: b.out, alerts: M.newbornAlerts({ birth_weight_g: b.w, apgar5: b.a5, resuscitation: n.resuscitation }, ga) });

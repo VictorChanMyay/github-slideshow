@@ -199,6 +199,28 @@ const MIGRATIONS = [
   );
   CREATE INDEX fp_patient ON family_planning(patient_id);
   `,
+  // 5: child health (immunization schedule, doses given, growth measurements)
+  `
+  CREATE TABLE vaccines(code TEXT PRIMARY KEY, name TEXT NOT NULL);
+  CREATE TABLE vaccine_doses(
+    id INTEGER PRIMARY KEY, vaccine_code TEXT NOT NULL REFERENCES vaccines(code), dose_no INTEGER NOT NULL, due_days INTEGER NOT NULL, min_age_days INTEGER NOT NULL,
+    min_interval_days INTEGER, max_age_days INTEGER, late_days INTEGER NOT NULL DEFAULT 28, UNIQUE(vaccine_code, dose_no)
+  );
+  CREATE TABLE immunizations(
+    id INTEGER PRIMARY KEY, patient_id INTEGER NOT NULL REFERENCES patients(id), vaccine_code TEXT NOT NULL, dose_no INTEGER NOT NULL, given_on TEXT NOT NULL,
+    batch_no TEXT, site TEXT, source TEXT NOT NULL CHECK(source IN ('given_here','card','birth_record')), valid INTEGER NOT NULL DEFAULT 1, invalid_reason TEXT,
+    recorded_by INTEGER REFERENCES users(id), recorded_at TEXT NOT NULL DEFAULT (datetime('now')), voided INTEGER NOT NULL DEFAULT 0, void_reason TEXT,
+    FOREIGN KEY(vaccine_code, dose_no) REFERENCES vaccine_doses(vaccine_code, dose_no)
+  );
+  CREATE UNIQUE INDEX one_valid_dose ON immunizations(patient_id, vaccine_code, dose_no) WHERE voided=0 AND valid=1;
+  CREATE INDEX imm_patient ON immunizations(patient_id);
+  CREATE TABLE growth_measurements(
+    id INTEGER PRIMARY KEY, patient_id INTEGER NOT NULL REFERENCES patients(id), encounter_id INTEGER REFERENCES encounters(id), measured_on TEXT NOT NULL, age_days INTEGER NOT NULL,
+    weight_kg REAL, length_cm REAL, head_cm REAL, muac_cm REAL, lying INTEGER, edema INTEGER NOT NULL DEFAULT 0, notes TEXT,
+    recorded_by INTEGER REFERENCES users(id), recorded_at TEXT NOT NULL DEFAULT (datetime('now')), voided INTEGER NOT NULL DEFAULT 0, void_reason TEXT
+  );
+  CREATE INDEX growth_patient ON growth_measurements(patient_id);
+  `,
 ];
 
 function open(file) {
@@ -230,6 +252,11 @@ function seedReference(db) {
   if (db.prepare('SELECT COUNT(*) c FROM icd10').get().c === 0) {
     const ins = db.prepare('INSERT INTO icd10(code,name) VALUES(?,?)');
     tx(db, () => { for (const [c, name] of require('./icd10')) ins.run(c, name); });
+  }
+  const { VACCINES, DOSES } = require('./immunization_seed');
+  if (db.prepare('SELECT COUNT(*) c FROM vaccines').get().c === 0) {
+    const v = db.prepare('INSERT INTO vaccines(code,name) VALUES(?,?)'), d = db.prepare('INSERT INTO vaccine_doses(vaccine_code,dose_no,due_days,min_age_days,min_interval_days,max_age_days,late_days) VALUES(?,?,?,?,?,?,?)');
+    tx(db, () => { for (const x of VACCINES) v.run(...x); for (const x of DOSES) d.run(...x); });
   }
   const { DRUGS, LABS } = require('./formulary_seed');
   if (db.prepare('SELECT COUNT(*) c FROM drugs').get().c === 0) {
