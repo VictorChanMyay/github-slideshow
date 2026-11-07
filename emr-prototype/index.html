@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EMR Prototype</title>
+<style>
+:root{--bg:#0b1216;--panel:#111c22;--side:#13222a;--line:#223540;--text:#e6f0f2;--mute:#8aa3ab;--accent:#2ec4a6;--gold:#f2b632;--bad:#ef6b6b;--ok:#4cc38a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,sans-serif}
+#app{display:flex;min-height:100vh}
+aside{width:250px;background:var(--side);border-right:1px solid var(--line);padding:14px;position:fixed;top:0;bottom:0;overflow:auto;z-index:20;transition:transform .2s}
+aside h1{font-size:18px;margin:0 0 4px;color:var(--accent)}
+aside .sub{color:var(--mute);font-size:12px;margin-bottom:12px;border-bottom:3px solid var(--gold);padding-bottom:10px}
+aside .grp{font-size:11px;letter-spacing:.12em;color:var(--mute);margin:16px 0 4px}
+aside a{display:block;padding:9px 12px;border-radius:10px;color:var(--text);text-decoration:none;cursor:pointer}
+aside a:hover{background:#1b3039}
+aside a.on{background:var(--accent);color:#04201b;font-weight:600}
+main{margin-left:250px;flex:1;padding:18px;min-width:0}
+header{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+header h2{margin:0;flex:1;font-size:20px}
+#burger{display:none;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+select,input,textarea,button{font:inherit;color:var(--text);background:#0c161b;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+textarea{width:100%;min-height:60px}
+button{cursor:pointer}button.pri{background:var(--accent);color:#04201b;border:0;font-weight:600}
+button.sm{padding:4px 9px;font-size:13px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:16px}
+.card,.panel{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:12px;padding:14px}
+.card b{display:block;font-size:28px;color:var(--accent)}.card span{color:var(--mute)}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.tablewrap{overflow-x:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+label{display:block;font-size:12px;color:var(--mute);margin-bottom:3px}
+label input,label select{width:100%}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;background:#1b3039}
+.tag.pending{color:var(--gold)}.tag.done{color:var(--ok)}.tag.warn{color:var(--bad)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.note{color:var(--mute);font-size:12px}
+h3{margin:18px 0 8px;font-size:16px}
+.banner{background:#2a1c1c;border:1px solid var(--bad);color:#ffb4b4;padding:8px 12px;border-radius:8px;margin:8px 0}
+@media(max-width:800px){aside{transform:translateX(-100%)}aside.open{transform:none}main{margin-left:0}#burger{display:block}}
+</style>
+</head>
+<body>
+<div id="app">
+<aside id="side"></aside>
+<main>
+  <header>
+    <button id="burger" onclick="document.getElementById('side').classList.toggle('open')">☰</button>
+    <h2 id="title"></h2>
+    <label style="margin:0">Signed in as
+      <select id="role" onchange="setRole(this.value)"></select>
+    </label>
+  </header>
+  <div id="view"></div>
+  <p class="note">Prototype with synthetic demo data only. Data is stored in this browser (localStorage). Not for real patient records.</p>
+</main>
+</div>
+
+<script>
+/* ---------- Reference data ---------- */
+const ICD10=[["A09","Infectious gastroenteritis / diarrhoea"],["A15","Respiratory tuberculosis"],["B50","Plasmodium falciparum malaria"],["B54","Malaria, unspecified"],["D50","Iron deficiency anaemia"],["E11","Type 2 diabetes mellitus"],["I10","Essential hypertension"],["J06","Acute upper respiratory infection"],["J18","Pneumonia, unspecified"],["J45","Asthma"],["K29","Gastritis"],["N39","Urinary tract infection"],["O80","Normal delivery"],["O99","Other maternal diseases (ANC)"],["R50","Fever, unknown origin"],["S61","Open wound of wrist/hand"],["Z00","General examination"],["Z23","Encounter for immunization"]];
+const VACCINES=["BCG","OPV","Pentavalent","PCV","Rotavirus","Measles-Rubella","Tetanus-diphtheria (Td)","COVID-19"];
+const LABS=["Malaria RDT","Complete blood count","Urinalysis","Random blood glucose","HIV rapid test","Hepatitis B surface Ag","Sputum AFB","Pregnancy test"];
+const ROLES={
+  Doctor:["dashboard","patients","encounters","lab","pharmacy","referrals","immunization","reports"],
+  Nurse:["dashboard","patients","encounters","immunization","lab"],
+  Pharmacist:["dashboard","patients","pharmacy"],
+  "Lab technician":["dashboard","patients","lab"],
+  "Records / HIS":["dashboard","patients","reports","audit"],
+  Admin:["dashboard","patients","encounters","lab","pharmacy","referrals","immunization","reports","audit","users"]
+};
+const NAV=[["","Dashboard","dashboard"],["CLINICAL"],["","Patient registry","patients"],["","Encounters","encounters"],["","Immunization","immunization"],["ORDERS"],["","Laboratory","lab"],["","Pharmacy","pharmacy"],["","Referrals","referrals"],["ADMIN"],["","Reports (HMIS)","reports"],["","Audit log","audit"],["","Users & roles","users"]];
+
+/* ---------- State ---------- */
+const KEY="emr-proto-v1";
+let S=load();
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s)return s}catch(e){}return seed()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function uid(){return Math.random().toString(36).slice(2,9)}
+function today(){return new Date().toISOString().slice(0,10)}
+function seed(){
+  const p=[["Demo Patient A","F","1992-03-14","Village 1","Penicillin"],["Demo Patient B","M","2019-07-02","Village 2",""],["Demo Patient C","F","1975-11-23","Village 3",""]]
+   .map((x,i)=>({id:uid(),mrn:"MTC-"+String(1001+i),name:x[0],sex:x[1],dob:x[2],phone:"",village:x[3],allergies:x[4],createdAt:today()}));
+  const e=[{id:uid(),pid:p[0].id,date:today(),type:"Outpatient",vitals:{temp:38.4,bp:"110/70",pulse:98,rr:20,spo2:98,wt:56},S:"Fever 3 days, headache",O:"Febrile, no rash",A:"Suspected malaria",P:"Malaria RDT, paracetamol",dx:["B54"],status:"Open"}];
+  const o=[{id:uid(),pid:p[0].id,eid:e[0].id,kind:"lab",text:"Malaria RDT",status:"Pending",date:today()},{id:uid(),pid:p[0].id,eid:e[0].id,kind:"rx",text:"Paracetamol 500 mg, 1 tab every 6 h, 3 days",status:"Pending",date:today()}];
+  return {patients:p,encounters:e,orders:o,imm:[],audit:[],role:"Doctor",view:"dashboard",sel:null,q:"",users:[{name:"Demo Doctor",role:"Doctor"},{name:"Demo Nurse",role:"Nurse"},{name:"Demo Pharmacist",role:"Pharmacist"},{name:"Demo Lab Tech",role:"Lab technician"},{name:"Demo HIS Officer",role:"Records / HIS"},{name:"Demo Admin",role:"Admin"}]};
+}
+function log(a){S.audit.unshift({ts:new Date().toISOString().replace("T"," ").slice(0,19),user:S.role,a});S.audit=S.audit.slice(0,300);save()}
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pat=id=>S.patients.find(p=>p.id===id);
+const age=d=>{const a=(Date.now()-new Date(d))/31557600000;return a<2?Math.floor(a*12)+" mo":Math.floor(a)+" y"};
+const dxName=c=>(ICD10.find(x=>x[0]===c)||[c,c])[1];
+
+/* ---------- Shell ---------- */
+function setRole(r){S.role=r;if(!ROLES[r].includes(S.view))S.view="dashboard";log("Switched role to "+r);render()}
+function go(v){S.view=v;S.sel=null;document.getElementById("side").classList.remove("open");save();render()}
+function render(){
+  const allowed=ROLES[S.role];
+  let h='<h1>EMR Prototype</h1><div class="sub">Community clinic · outpatient</div>',pend=null;
+  NAV.forEach(n=>{if(n.length===1){pend=n[0];return}
+    if(!allowed.includes(n[2]))return;
+    if(pend){h+=`<div class="grp">${pend}</div>`;pend=null}
+    h+=`<a class="${S.view===n[2]?"on":""}" onclick="go('${n[2]}')">${n[1]}</a>`});
+  document.getElementById("side").innerHTML=h;
+  const r=document.getElementById("role");r.innerHTML=Object.keys(ROLES).map(k=>`<option ${k===S.role?"selected":""}>${k}</option>`).join("");
+  const t=NAV.find(n=>n[2]===S.view);document.getElementById("title").textContent=t?t[1]:"";
+  document.getElementById("view").innerHTML=(V[S.view]||V.dashboard)();
+}
+
+/* ---------- Views ---------- */
+const V={};
+V.dashboard=()=>{
+  const pl=S.orders.filter(o=>o.kind==="lab"&&o.status==="Pending").length,pr=S.orders.filter(o=>o.kind==="rx"&&o.status==="Pending").length,rf=S.orders.filter(o=>o.kind==="referral"&&o.status==="Pending").length;
+  const te=S.encounters.filter(e=>e.date===today()).length;
+  const card=(n,l,v)=>`<div class="card" onclick="go('${v}')" style="cursor:pointer"><b>${n}</b><span>${l}</span></div>`;
+  return `<div class="cards">${card(S.patients.length,"Registered patients","patients")}${card(te,"Encounters today","encounters")}${card(pl,"Lab orders pending","lab")}${card(pr,"Prescriptions to dispense","pharmacy")}${card(rf,"Referrals open","referrals")}</div>
+  <div class="panel"><h3 style="margin-top:0">Recent encounters</h3>${encTable(S.encounters.slice(0,8))}</div>`;
+};
+function encTable(list){
+  if(!list.length)return '<p class="note">No encounters yet.</p>';
+  return `<div class="tablewrap"><table><tr><th>Date</th><th>Patient</th><th>Type</th><th>Diagnosis</th><th>Status</th></tr>${list.map(e=>{const p=pat(e.pid);return `<tr><td>${e.date}</td><td><a href="#" onclick="openPatient('${e.pid}');return false" style="color:var(--accent)">${esc(p?.name)}</a></td><td>${esc(e.type)}</td><td>${e.dx.map(c=>esc(c)+" "+esc(dxName(c))).join("<br>")||"—"}</td><td><span class="tag ${e.status==="Closed"?"done":"pending"}">${e.status}</span></td></tr>`}).join("")}</table></div>`;
+}
+function openPatient(id){S.view="patients";S.sel=id;save();render()}
+
+V.patients=()=>{
+  if(S.sel==="new")return regForm();
+  if(S.sel)return patientDetail(pat(S.sel));
+  const q=S.q.toLowerCase();
+  const list=S.patients.filter(p=>!q||(p.name+p.mrn+p.phone).toLowerCase().includes(q));
+  return `<div class="row"><input placeholder="Search name, MRN, phone" value="${esc(S.q)}" oninput="S.q=this.value;render2()" id="q" style="flex:1;min-width:200px"><button class="pri" onclick="S.sel='new';render()">+ Register patient</button></div>
+  <div class="panel tablewrap"><table><tr><th>MRN</th><th>Name</th><th>Sex</th><th>Age</th><th>Village</th></tr>${list.map(p=>`<tr style="cursor:pointer" onclick="openPatient('${p.id}')"><td>${esc(p.mrn)}</td><td>${esc(p.name)}</td><td>${p.sex}</td><td>${age(p.dob)}</td><td>${esc(p.village)}</td></tr>`).join("")||'<tr><td colspan=5 class="note">No match</td></tr>'}</table></div>`;
+};
+function render2(){const pos=document.getElementById("q").selectionStart;render();const q=document.getElementById("q");q.focus();q.setSelectionRange(pos,pos)}
+function regForm(){return `<div class="panel"><h3 style="margin-top:0">Register patient</h3>
+  <div class="grid">
+  <label>Full name<input id="r_name"></label>
+  <label>Sex<select id="r_sex"><option>F</option><option>M</option><option>Other</option></select></label>
+  <label>Date of birth<input type="date" id="r_dob"></label>
+  <label>Phone<input id="r_phone"></label>
+  <label>Village / address<input id="r_vil"></label>
+  <label>Known allergies<input id="r_all" placeholder="e.g. Penicillin"></label></div>
+  <div class="row"><button class="pri" onclick="savePatient()">Save</button><button onclick="S.sel=null;render()">Cancel</button></div>
+  <p class="note">A unique MRN is generated on save. Possible duplicates (same name and date of birth) are flagged.</p></div>`}
+function savePatient(){
+  const g=i=>document.getElementById(i).value.trim();
+  if(!g("r_name")||!g("r_dob")){alert("Name and date of birth are required.");return}
+  const dup=S.patients.find(p=>p.name.toLowerCase()===g("r_name").toLowerCase()&&p.dob===g("r_dob"));
+  if(dup&&!confirm("A patient with the same name and date of birth exists ("+dup.mrn+"). Register anyway?"))return;
+  const p={id:uid(),mrn:"MTC-"+(1001+S.patients.length),name:g("r_name"),sex:g("r_sex"),dob:g("r_dob"),phone:g("r_phone"),village:g("r_vil"),allergies:g("r_all"),createdAt:today()};
+  S.patients.push(p);log("Registered patient "+p.mrn);S.sel=p.id;save();render();
+}
+function patientDetail(p){
+  const encs=S.encounters.filter(e=>e.pid===p.id),ords=S.orders.filter(o=>o.pid===p.id),im=S.imm.filter(i=>i.pid===p.id);
+  log("Viewed record "+p.mrn);
+  const can=ROLES[S.role].includes("encounters");
+  return `<div class="row"><button onclick="S.sel=null;render()">← Back</button></div>
+  <div class="panel"><h3 style="margin-top:0">${esc(p.name)} <span class="tag">${esc(p.mrn)}</span></h3>
+  <div>${p.sex} · ${age(p.dob)} · DOB ${p.dob} · ${esc(p.village)} ${p.phone?"· "+esc(p.phone):""}</div>
+  ${p.allergies?`<div class="banner">⚠ Allergies: ${esc(p.allergies)}</div>`:'<div class="note">No known allergies recorded</div>'}
+  ${can?`<div class="row"><button class="pri" onclick="newEnc('${p.id}')">+ New encounter</button></div>`:""}</div>
+  <h3>Encounters</h3><div class="panel">${encTable(encs)}</div>
+  <h3>Orders</h3><div class="panel tablewrap">${ords.length?`<table><tr><th>Date</th><th>Type</th><th>Order</th><th>Status</th></tr>${ords.map(o=>`<tr><td>${o.date}</td><td>${o.kind}</td><td>${esc(o.text)}</td><td><span class="tag ${o.status==="Pending"?"pending":"done"}">${o.status}</span></td></tr>`).join("")}</table>`:'<p class="note">None</p>'}</div>
+  <h3>Immunizations</h3><div class="panel">${im.length?im.map(i=>`<div>${i.date} · ${esc(i.vaccine)} dose ${esc(i.dose)}</div>`).join(""):'<p class="note">None recorded</p>'}</div>`;
+}
+
+let draft=null;
+V.encounters=()=>{
+  if(draft)return encForm();
+  return `<div class="row"><select id="e_pick">${S.patients.map(p=>`<option value="${p.id}">${esc(p.mrn)} · ${esc(p.name)}</option>`).join("")}</select><button class="pri" onclick="newEnc(document.getElementById('e_pick').value)">+ New encounter</button></div>
+  <div class="panel">${encTable(S.encounters)}</div>`;
+};
+function newEnc(pid){draft={pid,type:"Outpatient",dx:[],labs:[],rx:[],ref:""};S.view="encounters";S.sel=null;render()}
+function encForm(){
+  const p=pat(draft.pid);
+  const f=(id,l,ph="")=>`<label>${l}<input id="${id}" placeholder="${ph}"></label>`;
+  return `<div class="panel"><h3 style="margin-top:0">New encounter · ${esc(p.name)} (${esc(p.mrn)})</h3>
+  ${p.allergies?`<div class="banner">⚠ Allergies: ${esc(p.allergies)}</div>`:""}
+  <label style="max-width:240px">Encounter type<select id="e_type"><option>Outpatient</option><option>Antenatal</option><option>Follow-up</option><option>Emergency</option></select></label>
+  <h3>1. Triage & vitals</h3><div class="grid">${f("v_temp","Temp (°C)")}${f("v_bp","BP (mmHg)","120/80")}${f("v_pulse","Pulse (/min)")}${f("v_rr","Resp rate (/min)")}${f("v_spo2","SpO₂ (%)")}${f("v_wt","Weight (kg)")}</div>
+  <h3>2. Consultation (SOAP)</h3>
+  <label>Subjective (history, complaints)<textarea id="s_s"></textarea></label>
+  <label>Objective (examination findings)<textarea id="s_o"></textarea></label>
+  <label>Assessment<textarea id="s_a"></textarea></label>
+  <label>Plan<textarea id="s_p"></textarea></label>
+  <h3>3. Diagnosis (ICD-10)</h3>
+  <div class="row"><select id="dx_pick">${ICD10.map(c=>`<option value="${c[0]}">${c[0]} · ${c[1]}</option>`).join("")}</select><button onclick="addDx()">Add</button></div>
+  <div id="dx_list">${draft.dx.map(c=>`<span class="tag">${c} ${esc(dxName(c))}</span> `).join("")||'<span class="note">None added</span>'}</div>
+  <h3>4. Orders</h3>
+  <div class="row"><select id="lab_pick">${LABS.map(l=>`<option>${l}</option>`).join("")}</select><button onclick="addLab()">+ Lab test</button></div>
+  <div class="row"><input id="rx_txt" placeholder="Drug, dose, frequency, duration" style="flex:1;min-width:220px"><button onclick="addRx()">+ Prescription</button></div>
+  <div class="row"><input id="ref_txt" placeholder="Referral destination and reason" style="flex:1;min-width:220px"></div>
+  <div id="ord_list">${ordPreview()}</div>
+  <div class="row"><button class="pri" onclick="saveEnc()">Sign & save encounter</button><button onclick="draft=null;render()">Discard</button></div></div>`;
+}
+const ordPreview=()=>draft.labs.map(l=>`<div>🧪 ${esc(l)}</div>`).concat(draft.rx.map(r=>`<div>💊 ${esc(r)}</div>`)).join("");
+function addDx(){const c=document.getElementById("dx_pick").value;if(!draft.dx.includes(c))draft.dx.push(c);keepAndRender()}
+function addLab(){draft.labs.push(document.getElementById("lab_pick").value);keepAndRender()}
+function addRx(){const t=document.getElementById("rx_txt").value.trim();if(!t)return;
+  const al=(pat(draft.pid).allergies||"").toLowerCase().split(/[,;]+/).map(s=>s.trim()).filter(Boolean);
+  const hit=al.find(a=>t.toLowerCase().includes(a));
+  if(hit&&!confirm("Allergy alert: patient is allergic to "+hit+". Prescribe anyway?"))return;
+  draft.rx.push(t);keepAndRender()}
+function keepAndRender(){ // preserve typed form values across partial re-render
+  const ids=["e_type","v_temp","v_bp","v_pulse","v_rr","v_spo2","v_wt","s_s","s_o","s_a","s_p","ref_txt"],keep={};
+  ids.forEach(i=>keep[i]=document.getElementById(i).value);render();
+  ids.forEach(i=>document.getElementById(i).value=keep[i]);
+}
+function saveEnc(){
+  const g=i=>document.getElementById(i).value.trim();
+  if(!g("s_s")&&!draft.dx.length){alert("Add at least a complaint or a diagnosis.");return}
+  const e={id:uid(),pid:draft.pid,date:today(),type:g("e_type"),vitals:{temp:g("v_temp"),bp:g("v_bp"),pulse:g("v_pulse"),rr:g("v_rr"),spo2:g("v_spo2"),wt:g("v_wt")},S:g("s_s"),O:g("s_o"),A:g("s_a"),P:g("s_p"),dx:draft.dx,status:"Open"};
+  S.encounters.unshift(e);
+  draft.labs.forEach(l=>S.orders.push({id:uid(),pid:e.pid,eid:e.id,kind:"lab",text:l,status:"Pending",date:today()}));
+  draft.rx.forEach(r=>S.orders.push({id:uid(),pid:e.pid,eid:e.id,kind:"rx",text:r,status:"Pending",date:today()}));
+  if(g("ref_txt"))S.orders.push({id:uid(),pid:e.pid,eid:e.id,kind:"referral",text:g("ref_txt"),status:"Pending",date:today()});
+  log("Signed encounter for "+pat(e.pid).mrn);
+  const pid=draft.pid;draft=null;openPatient(pid);
+}
+
+function orderView(kind,doneLabel,extra){
+  const l=S.orders.filter(o=>o.kind===kind);
+  return `<div class="panel tablewrap">${l.length?`<table><tr><th>Date</th><th>Patient</th><th>Order</th><th>Status</th><th></th></tr>${l.map(o=>`<tr><td>${o.date}</td><td>${esc(pat(o.pid)?.name)}</td><td>${esc(o.text)}${o.result?`<div class="note">Result: ${esc(o.result)}</div>`:""}</td><td><span class="tag ${o.status==="Pending"?"pending":"done"}">${o.status}</span></td><td>${o.status==="Pending"?`<button class="sm pri" onclick="${extra}('${o.id}')">${doneLabel}</button>`:""}</td></tr>`).join("")}</table>`:'<p class="note">No orders.</p>'}</div>`;
+}
+V.lab=()=>orderView("lab","Enter result","labResult");
+V.pharmacy=()=>orderView("rx","Dispense","dispense");
+V.referrals=()=>orderView("referral","Mark completed","refDone");
+function labResult(id){const o=S.orders.find(x=>x.id===id),r=prompt("Result for "+o.text+":");if(!r)return;o.result=r;o.status="Resulted";log("Lab result entered");save();render()}
+function dispense(id){const o=S.orders.find(x=>x.id===id);o.status="Dispensed";log("Dispensed prescription");save();render()}
+function refDone(id){const o=S.orders.find(x=>x.id===id);o.status="Completed";log("Referral completed");save();render()}
+
+V.immunization=()=>`<div class="panel"><h3 style="margin-top:0">Record vaccination</h3><div class="grid">
+  <label>Patient<select id="i_p">${S.patients.map(p=>`<option value="${p.id}">${esc(p.mrn)} · ${esc(p.name)}</option>`).join("")}</select></label>
+  <label>Vaccine<select id="i_v">${VACCINES.map(v=>`<option>${v}</option>`).join("")}</select></label>
+  <label>Dose #<input id="i_d" type="number" min="1" value="1"></label>
+  <label>Date<input id="i_dt" type="date" value="${today()}"></label></div>
+  <div class="row"><button class="pri" onclick="addImm()">Save</button></div></div>
+  <h3>Register</h3><div class="panel tablewrap"><table><tr><th>Date</th><th>Patient</th><th>Vaccine</th><th>Dose</th></tr>${S.imm.map(i=>`<tr><td>${i.date}</td><td>${esc(pat(i.pid)?.name)}</td><td>${esc(i.vaccine)}</td><td>${esc(i.dose)}</td></tr>`).join("")||'<tr><td colspan=4 class="note">None</td></tr>'}</table></div>`;
+function addImm(){const g=i=>document.getElementById(i).value;
+  S.imm.unshift({id:uid(),pid:g("i_p"),vaccine:g("i_v"),dose:g("i_d"),date:g("i_dt")});log("Recorded vaccination");save();render()}
+
+V.reports=()=>{
+  const c={};S.encounters.forEach(e=>e.dx.forEach(d=>c[d]=(c[d]||0)+1));
+  const rows=Object.entries(c).sort((a,b)=>b[1]-a[1]);
+  const m=S.patients.filter(p=>p.sex==="M").length,f=S.patients.filter(p=>p.sex==="F").length;
+  return `<div class="cards"><div class="card"><b>${S.encounters.length}</b><span>Total encounters</span></div><div class="card"><b>${f} F / ${m} M</b><span>Registered by sex</span></div><div class="card"><b>${S.imm.length}</b><span>Vaccinations given</span></div></div>
+  <div class="panel tablewrap"><h3 style="margin-top:0">Morbidity (ICD-10 diagnoses)</h3><table><tr><th>Code</th><th>Diagnosis</th><th>Cases</th></tr>${rows.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(dxName(r[0]))}</td><td>${r[1]}</td></tr>`).join("")||'<tr><td colspan=3 class="note">No data</td></tr>'}</table>
+  <div class="row"><button onclick="exportCsv()">Export encounters (CSV)</button></div></div>`;
+};
+function exportCsv(){
+  const rows=[["date","mrn","type","diagnoses"]].concat(S.encounters.map(e=>[e.date,pat(e.pid)?.mrn,e.type,e.dx.join("|")]));
+  const blob=new Blob([rows.map(r=>r.map(x=>'"'+String(x??"").replace(/"/g,'""')+'"').join(",")).join("\n")],{type:"text/csv"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="encounters.csv";a.click();log("Exported encounters CSV");
+}
+V.audit=()=>`<div class="panel tablewrap"><table><tr><th>Time</th><th>Role</th><th>Action</th></tr>${S.audit.map(a=>`<tr><td>${a.ts}</td><td>${esc(a.user)}</td><td>${esc(a.a)}</td></tr>`).join("")||'<tr><td colspan=3 class="note">Empty</td></tr>'}</table></div>`;
+V.users=()=>`<div class="panel tablewrap"><table><tr><th>User</th><th>Role</th><th>Access</th></tr>${S.users.map(u=>`<tr><td>${esc(u.name)}</td><td>${esc(u.role)}</td><td class="note">${ROLES[u.role].join(", ")}</td></tr>`).join("")}</table><p class="note">Role-based access control: each role only sees the modules it needs. Every record view and change is written to the audit log.</p></div>`;
+
+render();
+</script>
+</body>
+</html>
