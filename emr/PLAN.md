@@ -44,7 +44,7 @@ Doctor/medic, Nurse, Midwife, Pharmacist, Lab technician, Registration clerk, HI
 | M4 ✅ | Reproductive, maternal and child health | Antenatal episodes/visits, risk and danger-sign alerts, EDD, delivery/partograph summary, newborn, postnatal, family planning, mother-baby link |
 | M5 ✅ | Child health | Immunization schedule with due/overdue, growth charts (WHO z-scores), nutrition screening |
 | M6 ✅ | Programs | TB, HIV (extra confidentiality), malaria, chronic disease follow-up with recall lists |
-| M7 | Referrals and continuity | Referral out/back, printable referral and discharge summaries, appointments and reminders |
+| M7 ✅ | Referrals and continuity | Referral out/back, printable referral and discharge summaries, appointments and reminders |
 | M8 | Inpatient and procedures | Admissions, beds, ward notes, discharge, procedures log, blood bank inventory |
 | M9 | Reporting | Morbidity, MCH, immunization, stock, workload; donor report templates; CSV/Excel export; dashboards |
 | M10 | Hardening and handover | Backups and restore test, security review checklist, performance on low-spec PC, user guide, admin guide, training deck, source handover |
@@ -81,3 +81,10 @@ See `emr-prototype/DISCOVERY_QUESTIONS.md`. Answers on forms, drug list, lab lis
 - **Nobody is closed automatically.** The system suggests "lost to follow-up" after a programme-specific delay; a clinician closes the record with an outcome. Outcome rules follow WHO-style definitions (for example TB "cured" needs a confirmed diagnosis and negative smears), and the system refuses an outcome the data do not support.
 - **Nutrition programme** uses the M5 growth measurements: each follow-up visit also saves a growth record, so charts stay current.
 - Not in M6: TB contact tracing, drug-resistant TB regimens, ART regimen switching rules, DOT observer records, PMTCT infant testing schedule. These need the clinic's protocols.
+
+## M7 design decisions (referrals, summaries, appointments, follow-up) - to confirm with the clinic
+- **Referrals** go out with the patient's consent. Without consent a referral is only allowed as an *emergency* with a written reason. The letter is composed from the visit but **never includes sensitive lab results or any HIV programme data**; the clinician can type anything extra.
+- A referral stays "open" until someone records the patient attended or the hospital's reply ("referral back"). The system flags referrals with no feedback after 1 day (emergency), 3 days (urgent) or 14 days (routine) and 30 days after attendance. These limits are drafts.
+- **Appointments never name a diagnosis:** purposes are generic ("programme", "child health"...), and HIV follow-up is never an appointment purpose. Reminder phone numbers are shown only if the patient agreed to reminders, and never for restricted patients.
+- **The follow-up list** merges overdue contacts from every module, but each person only sees what their role may see: a registration clerk sees appointments only, never that someone is overdue for TB or antenatal care.
+- No SMS gateway yet: reminders are a call list where staff record the result. Inpatient discharge summaries come with M8 (inpatient); M7 gives a take-home visit summary and the referral letter.

@@ -38,6 +38,9 @@ async function openPatient(pid) {
   if (r.status === 403) { alert(t('restricted.denied')); return; }
   if (!r.ok) { if (r.status !== 428) oops(r); return; }
   state.patient = r.data.patient; state.clinical = r.data.allergies ? { allergies: r.data.allergies, problems: r.data.problems, encounters: r.data.encounters } : null; // clerks get no clinical data
+  state.appts = null; state.refs = null;
+  if (can('appt.read')) { await loadContMeta(); const ap = await api('GET', `/api/patients/${pid}/appointments`); if (ap.ok) state.appts = ap.data.appointments; }
+  if (can('ref.read')) { const rf = await withAccess(pid, () => api('GET', `/api/patients/${pid}/referrals`)); if (rf.ok) state.refs = rf.data.referrals; }
   state.programs = null;
   if (can('prog.read')) { await loadProgMeta(); const pr = await withAccess(pid, () => api('GET', `/api/patients/${pid}/programs`)); if (pr.ok) state.programs = pr.data.enrolments; }
   state.child = null;
@@ -191,6 +194,12 @@ function encounterView() {
       icdPicker(async (c) => { if (await reload(await api('POST', `/api/encounters/${e.id}/diagnoses`, { code: c.code, kind: kind.value, certainty: cert.value }))) redraw(); }), h('p', { class: 'note' }, t('dx.draftnote'))) : null));
 
   root.append(...ordersPanels(E, e, locked, reload, redraw));
+
+  const extra = [];
+  if (can('ref.write') && e.status !== 'cancelled') extra.push(h('button', { onclick: () => referralDialog({ id: p.id, name_en: p.name_en }, e.id) }, t('ref.new')));
+  if (can('appt.write') && e.status !== 'cancelled') extra.push(h('button', { onclick: async () => { await loadContMeta(); apptDialog({ id: p.id, name_en: p.name_en }, e.id, () => alert(t('appt.booked'))); } }, t('appt.book_followup')));
+  if (e.status === 'signed' && can('encounter.read')) extra.push(h('button', { onclick: () => openVisitSummary(e.id, p.id) }, t('vs.print')));
+  if (extra.length) root.append(h('div', { class: 'row' }, extra));
 
   /* sign / cancel / addenda */
   if (!locked) {

@@ -45,6 +45,7 @@ function checkin(db, user, patientId, input) {
     const q = db.prepare('SELECT COALESCE(MAX(queue_no),0)+1 n FROM encounters WHERE visit_date=?').get(date).n;
     const r = db.prepare('INSERT INTO encounters(patient_id,visit_date,queue_no,type,priority,chief_complaint,checkin_by) VALUES(?,?,?,?,?,?,?)')
       .run(patientId, date, q, type, priority, text(input.chief_complaint, 300), user.id);
+    db.prepare("UPDATE appointments SET status='attended', encounter_id=? WHERE patient_id=? AND appt_date=? AND status='scheduled'").run(Number(r.lastInsertRowid), patientId, date); // arriving on the day counts as attending
     return { id: Number(r.lastInsertRowid), queue_no: q };
   });
 }

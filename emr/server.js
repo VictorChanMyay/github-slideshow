@@ -17,6 +17,7 @@ const ordersRoutes = require('./lib/orders_routes');
 const mchRoutes = require('./lib/mch_routes');
 const childRoutes = require('./lib/child_routes');
 const programsRoutes = require('./lib/programs_routes');
+const continuityRoutes = require('./lib/continuity_routes');
 
 const PUBLIC = path.join(__dirname, 'public');
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -136,6 +137,7 @@ function createServer(db, opts = {}) {
       if (mchRoutes.handle({ db, user, req, res, url, body, ip, send, fail })) return;
       if (childRoutes.handle({ db, user, req, res, url, body, ip, send, fail })) return;
       if (programsRoutes.handle({ db, user, req, res, url, body, ip, send, fail })) return;
+      if (continuityRoutes.handle({ db, user, req, res, url, body, ip, send, fail })) return;
       let m;
       if ((m = url.pathname.match(/^\/api\/patients\/(\d+)$/)) && req.method === 'GET') {
         if (!can(user.role, 'patient.read')) return fail(res, 403, 'Not allowed');

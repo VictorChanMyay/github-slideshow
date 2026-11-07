@@ -51,3 +51,5 @@ dialog::backdrop{background:#000a}
 table .tag{white-space:nowrap}
 dialog.wide{max-width:820px;max-height:92vh;overflow:auto}
 .checks{display:flex;flex-wrap:wrap;gap:6px 16px;margin:6px 0}
+.prewrap{white-space:pre-wrap}
+.sigline{border-top:1px solid #888;width:260px;margin-top:36px;padding-top:4px;font-size:12px}

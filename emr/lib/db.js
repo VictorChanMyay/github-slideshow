@@ -238,6 +238,33 @@ const MIGRATIONS = [
   );
   CREATE INDEX pvisit_enrol ON program_visits(enrolment_id);
   `,
+  // 7: referrals, appointments and reminders
+  `
+  CREATE TABLE referral_destinations(id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, type TEXT NOT NULL DEFAULT 'hospital', contact TEXT, active INTEGER NOT NULL DEFAULT 1);
+  CREATE TABLE referrals(
+    id INTEGER PRIMARY KEY, ref_no TEXT NOT NULL UNIQUE, patient_id INTEGER NOT NULL REFERENCES patients(id), encounter_id INTEGER REFERENCES encounters(id),
+    destination_id INTEGER REFERENCES referral_destinations(id), destination_name TEXT NOT NULL, service TEXT, reason TEXT NOT NULL,
+    urgency TEXT NOT NULL CHECK(urgency IN ('routine','urgent','emergency')), clinical_summary TEXT NOT NULL, needs TEXT,
+    consent_to_share INTEGER NOT NULL DEFAULT 0, consent_note TEXT,
+    status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open','attended','completed','cancelled')), cancel_reason TEXT,
+    created_by INTEGER REFERENCES users(id), created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    attended_on TEXT, back_outcome TEXT, back_treatment TEXT, back_followup TEXT, back_by INTEGER REFERENCES users(id), back_at TEXT
+  );
+  CREATE INDEX referrals_patient ON referrals(patient_id);
+  CREATE INDEX referrals_status ON referrals(status);
+  CREATE TABLE appointments(
+    id INTEGER PRIMARY KEY, patient_id INTEGER NOT NULL REFERENCES patients(id), encounter_id INTEGER REFERENCES encounters(id), appt_date TEXT NOT NULL, appt_time TEXT,
+    purpose TEXT NOT NULL, note TEXT, reminder_ok INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL DEFAULT 'scheduled' CHECK(status IN ('scheduled','attended','cancelled','rescheduled')),
+    cancel_reason TEXT, rescheduled_to INTEGER, created_by INTEGER REFERENCES users(id), created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX appt_date ON appointments(appt_date);
+  CREATE INDEX appt_patient ON appointments(patient_id);
+  CREATE TABLE appointment_reminders(
+    id INTEGER PRIMARY KEY, appointment_id INTEGER NOT NULL REFERENCES appointments(id), method TEXT NOT NULL CHECK(method IN ('call','sms','visit')),
+    result TEXT NOT NULL CHECK(result IN ('reached','no_answer','wrong_number','declined')), by_user INTEGER REFERENCES users(id), at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX reminders_appt ON appointment_reminders(appointment_id);
+  `,
 ];
 
 function open(file) {
@@ -270,6 +297,7 @@ function seedReference(db) {
     const ins = db.prepare('INSERT INTO icd10(code,name) VALUES(?,?)');
     tx(db, () => { for (const [c, name] of require('./icd10')) ins.run(c, name); });
   }
+  if (db.prepare('SELECT COUNT(*) c FROM referral_destinations').get().c === 0) db.prepare("INSERT INTO referral_destinations(name,type) VALUES('Mae Sot Hospital','hospital')").run(); // name only: the clinic adds contacts and other services
   const { VACCINES, DOSES } = require('./immunization_seed');
   if (db.prepare('SELECT COUNT(*) c FROM vaccines').get().c === 0) {
     const v = db.prepare('INSERT INTO vaccines(code,name) VALUES(?,?)'), d = db.prepare('INSERT INTO vaccine_doses(vaccine_code,dose_no,due_days,min_age_days,min_interval_days,max_age_days,late_days) VALUES(?,?,?,?,?,?,?)');

@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const dir = path.join(__dirname, '..', 'public');
 const en = JSON.parse(fs.readFileSync(path.join(dir, 'i18n', 'en.json'), 'utf8'));
-const src = ['app.js', 'clinical.js', 'orders.js', 'mch.js', 'child.js', 'programs.js'].map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
+const src = ['app.js', 'clinical.js', 'orders.js', 'mch.js', 'child.js', 'programs.js', 'continuity.js'].map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
 
 test('every literal t("key") used in the screens exists in English', () => {
   const keys = [...src.matchAll(/\bt\('([A-Za-z0-9_.]+)'\)/g)].map((m) => m[1]);
@@ -89,4 +89,16 @@ test('every programme field, option, outcome and flag from the server has text',
   for (const r of ['cured_needs_confirmed', 'cured_needs_negative_smears', 'recovered_but_positive', 'nutrition_cured_needs_criteria']) assert.ok(`prog.reason.${r}` in en, r);
   for (const s of ['done', 'due', 'overdue', 'upcoming']) assert.ok(`prog.sched.${s}` in en, s);
   for (const s of ['month2', 'month5', 'end_of_treatment', 'day3', 'day28']) assert.ok(`prog.sched_key.${s}` in en, s);
+});
+
+test('every appointment purpose, contact method, referral urgency and state from the server has text', () => {
+  const ap = require('../lib/appointments'); const rf = require('../lib/referrals');
+  for (const v of ap.PURPOSES) assert.ok(`fu.purpose.${v}` in en, v); for (const v of ap.METHODS) assert.ok(`fu.method.${v}` in en, v); for (const v of ap.RESULTS) assert.ok(`fu.result.${v}` in en, v);
+  for (const v of rf.URGENCY) assert.ok(`ref.urgency.${v}` in en, v);
+  for (const v of ['open', 'attended', 'completed', 'cancelled']) assert.ok(`ref.status.${v}` in en, v);
+  for (const v of ['scheduled', 'attended', 'cancelled', 'rescheduled', 'missed']) assert.ok(`fu.astatus.${v}` in en, v);
+  for (const v of ['missed', 'today', 'tomorrow']) assert.ok(`fu.state.${v}` in en, v); for (const v of ['upcoming', 'missed']) assert.ok(`fu.reason.${v}` in en, v);
+  for (const v of ['appointment', 'referral', 'anc', 'postnatal', 'fp', 'immunization', 'programme']) assert.ok(`fu.kind.${v}` in en, v);
+  const fu = fs.readFileSync(path.join(__dirname, '..', 'lib', 'followup.js'), 'utf8'); for (const k of [...fu.matchAll(/add\('([a-z]+)'/g)].map((m) => m[1])) assert.ok(`fu.kind.${k}` in en, 'follow-up kind ' + k);
+  assert.ok(!ap.PURPOSES.includes('hiv') && !ap.PURPOSES.includes('tb')); // an appointment can never name a diagnosis
 });

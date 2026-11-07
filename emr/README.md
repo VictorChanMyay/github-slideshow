@@ -1,6 +1,6 @@
 # Clinic EMR (volunteer prototype)
 
-A working, multi-user electronic medical record prototype for a community clinic. **Demo data only. Do not enter real patient information.** See `PLAN.md` for the full roadmap (10 milestones). Milestones **M1 (foundation)**, **M2 (outpatient core)** and **M3 (lab, prescribing, dispensing, stock)** **M4 (maternal and child health)** and **M5 (child health)** and **M6 (programmes)** are done.
+A working, multi-user electronic medical record prototype for a community clinic. **Demo data only. Do not enter real patient information.** See `PLAN.md` for the full roadmap (10 milestones). Milestones **M1 (foundation)**, **M2 (outpatient core)** and **M3 (lab, prescribing, dispensing, stock)** **M4 (maternal and child health)** and **M5 (child health)** and **M6 (programmes)** and **M7 (referrals, summaries, appointments, follow-up)** are done.
 
 ## What works now (M1)
 - Sign-in with roles (doctor, nurse, midwife, pharmacist, lab, registration, HIS, program officer, admin); lockout after 5 failed attempts; forced password change for new users
@@ -52,6 +52,18 @@ A working, multi-user electronic medical record prototype for a community clinic
 - **Malnutrition programme (SAM/MAM):** uses the M5 growth records: each follow-up visit also saves a growth measurement. Flags for weight loss, failed appetite test, oedema and no response after 8 weeks. "Cured" needs the last two visits to meet WHO-style discharge criteria. A list shows children flagged in the growth register who are not enrolled yet.
 - **Chronic disease:** hypertension, diabetes, asthma and epilepsy, each with its own control flags. The next visit is 28 days when control is poor and 90 days when it is good.
 - **Recall lists:** everyone overdue or due within 7 days, most overdue first. A phone number is shown only if the patient agreed to be contacted for that programme (never for restricted patients). **Nobody is closed automatically:** after a long delay the system only suggests "lost to follow-up".
+
+## Added in M7 (continuity of care)
+- **Referrals:** written from a visit (or from the patient page) to a destination list (Mae Sot Hospital is seeded by name only; an admin adds others) or any typed name. Urgency, reason, a clinical summary that can be **filled automatically from the visit** (diagnoses, vital signs, notes, medicines, non-sensitive results, allergies), and transport or escort needs. **The automatic summary never includes sensitive test results (HIV, hepatitis B, syphilis) or any HIV programme information.**
+- **Consent:** a referral needs the patient's agreement to share information. Without it, only an *emergency* referral is allowed, with a written reason kept on the record.
+- **Referral back:** staff record that the patient attended and the reply from the receiving service (outcome, treatment, follow-up), which closes the referral. A list shows open referrals, flagging those with no news after 1 day (emergency), 3 days (urgent) or 14 days (routine), or 30 days after attendance (draft limits).
+- **Printable letter and take-home visit summary:** both print on A4 with the clinic logo; the summary needs a signed visit, lists diagnoses, medicines, non-sensitive results, allergies, the plan (can be left off) and the next appointment.
+- **Appointments:** by day with a 14-day load strip, booked from the patient page, a visit, or the Appointments screen; moved or cancelled with history. Purposes are generic so reception never sees a diagnosis (**HIV or TB can never be an appointment purpose**). Arriving on the day marks the appointment as attended. A past appointment shows as "missed".
+- **Reminder calls:** no SMS gateway yet. A call list shows patients with an appointment in the next 2 days and those who missed one in the last 14 days, **only if they agreed to reminders**, with the phone number (never for restricted records). Staff log the result; a reached patient leaves the list.
+- **Follow-up list:** everyone who needs contact, merged from appointments, referral replies, antenatal and postnatal contacts, family planning, vaccines and programme visits, most urgent first. **Each role sees only what it may:** reception sees appointments only, and nobody without HIV access sees HIV follow-up.
+- Inpatient discharge summaries come with Milestone 8.
+
+**Needs clinical review before real use (M7):** the referral reply limits (1, 3, 14 and 30 days), the list of appointment purposes, who may write referrals (doctors and midwives) and who may record replies (also nurses), the wording of the letter and summary, and the consent rule for emergencies.
 
 **Needs clinical review before real use (M6):** every interval, threshold and outcome rule in `lib/programs_rules.js` (smear months, viral load schedule, malaria follow-up days, discharge criteria, visit intervals, the "lost" delays), the fields in `lib/programs_spec.js`, and **which roles may handle HIV records** (nurses and midwives currently can; confirm). Not included: TB contact tracing, drug-resistant TB regimens, ART regimen changes, DOT observer records, infant testing in PMTCT.
 
