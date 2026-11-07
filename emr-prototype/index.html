@@ -3,26 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>EMR Prototype</title>
+<title>Mae Tao Clinic EMR Prototype</title>
 <style>
-:root{--bg:#0b1216;--panel:#111c22;--side:#13222a;--line:#223540;--text:#e6f0f2;--mute:#8aa3ab;--accent:#2ec4a6;--gold:#f2b632;--bad:#ef6b6b;--ok:#4cc38a}
+:root{--bg:#0b1216;--panel:#111c22;--side:#13222a;--line:#223540;--text:#e6f0f2;--mute:#8aa3ab;--accent:#4cb86a;--gold:#f2c230;--bad:#ef6b6b;--ok:#4cc38a}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,sans-serif}
 #app{display:flex;min-height:100vh}
 aside{width:250px;background:var(--side);border-right:1px solid var(--line);padding:14px;position:fixed;top:0;bottom:0;overflow:auto;z-index:20;transition:transform .2s}
 aside h1{font-size:18px;margin:0 0 4px;color:var(--accent)}
+.logo{background:#fff;border-radius:12px;padding:6px;text-align:center;margin-bottom:10px}.logo img{height:64px}
 aside .sub{color:var(--mute);font-size:12px;margin-bottom:12px;border-bottom:3px solid var(--gold);padding-bottom:10px}
 aside .grp{font-size:11px;letter-spacing:.12em;color:var(--mute);margin:16px 0 4px}
 aside a{display:block;padding:9px 12px;border-radius:10px;color:var(--text);text-decoration:none;cursor:pointer}
 aside a:hover{background:#1b3039}
-aside a.on{background:var(--accent);color:#04201b;font-weight:600}
+aside a.on{background:var(--accent);color:#06210f;font-weight:600}
 main{margin-left:250px;flex:1;padding:18px;min-width:0}
 header{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
 header h2{margin:0;flex:1;font-size:20px}
 #burger{display:none;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
 select,input,textarea,button{font:inherit;color:var(--text);background:#0c161b;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
 textarea{width:100%;min-height:60px}
-button{cursor:pointer}button.pri{background:var(--accent);color:#04201b;border:0;font-weight:600}
+button{cursor:pointer}button.pri{background:var(--accent);color:#06210f;border:0;font-weight:600}
 button.sm{padding:4px 9px;font-size:13px}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:16px}
 .card,.panel{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:12px;padding:14px}
@@ -65,17 +66,17 @@ const ICD10=[["A09","Infectious gastroenteritis / diarrhoea"],["A15","Respirator
 const VACCINES=["BCG","OPV","Pentavalent","PCV","Rotavirus","Measles-Rubella","Tetanus-diphtheria (Td)","COVID-19"];
 const LABS=["Malaria RDT","Complete blood count","Urinalysis","Random blood glucose","HIV rapid test","Hepatitis B surface Ag","Sputum AFB","Pregnancy test"];
 const ROLES={
-  Doctor:["dashboard","patients","encounters","lab","pharmacy","referrals","immunization","reports"],
-  Nurse:["dashboard","patients","encounters","immunization","lab"],
-  Pharmacist:["dashboard","patients","pharmacy"],
+  Doctor:["dashboard","patients","encounters","anc","lab","pharmacy","referrals","immunization","reports"],
+  Nurse:["dashboard","patients","encounters","anc","immunization","lab"],
+  Pharmacist:["dashboard","patients","pharmacy","stock"],
   "Lab technician":["dashboard","patients","lab"],
   "Records / HIS":["dashboard","patients","reports","audit"],
-  Admin:["dashboard","patients","encounters","lab","pharmacy","referrals","immunization","reports","audit","users"]
+  Admin:["dashboard","patients","encounters","anc","lab","pharmacy","stock","referrals","immunization","reports","audit","users"]
 };
-const NAV=[["","Dashboard","dashboard"],["CLINICAL"],["","Patient registry","patients"],["","Encounters","encounters"],["","Immunization","immunization"],["ORDERS"],["","Laboratory","lab"],["","Pharmacy","pharmacy"],["","Referrals","referrals"],["ADMIN"],["","Reports (HMIS)","reports"],["","Audit log","audit"],["","Users & roles","users"]];
+const NAV=[["","Dashboard","dashboard"],["CLINICAL"],["","Patient registry","patients"],["","Encounters","encounters"],["","Antenatal care","anc"],["","Immunization","immunization"],["ORDERS"],["","Laboratory","lab"],["","Pharmacy","pharmacy"],["","Stock","stock"],["","Referrals","referrals"],["ADMIN"],["","Reports (HMIS)","reports"],["","Audit log","audit"],["","Users & roles","users"]];
 
 /* ---------- State ---------- */
-const KEY="emr-proto-v1";
+const KEY="emr-proto-v2";
 let S=load();
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s)return s}catch(e){}return seed()}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
@@ -86,7 +87,7 @@ function seed(){
    .map((x,i)=>({id:uid(),mrn:"MTC-"+String(1001+i),name:x[0],sex:x[1],dob:x[2],phone:"",village:x[3],allergies:x[4],createdAt:today()}));
   const e=[{id:uid(),pid:p[0].id,date:today(),type:"Outpatient",vitals:{temp:38.4,bp:"110/70",pulse:98,rr:20,spo2:98,wt:56},S:"Fever 3 days, headache",O:"Febrile, no rash",A:"Suspected malaria",P:"Malaria RDT, paracetamol",dx:["B54"],status:"Open"}];
   const o=[{id:uid(),pid:p[0].id,eid:e[0].id,kind:"lab",text:"Malaria RDT",status:"Pending",date:today()},{id:uid(),pid:p[0].id,eid:e[0].id,kind:"rx",text:"Paracetamol 500 mg, 1 tab every 6 h, 3 days",status:"Pending",date:today()}];
-  return {patients:p,encounters:e,orders:o,imm:[],audit:[],role:"Doctor",view:"dashboard",sel:null,q:"",users:[{name:"Demo Doctor",role:"Doctor"},{name:"Demo Nurse",role:"Nurse"},{name:"Demo Pharmacist",role:"Pharmacist"},{name:"Demo Lab Tech",role:"Lab technician"},{name:"Demo HIS Officer",role:"Records / HIS"},{name:"Demo Admin",role:"Admin"}]};
+  return {anc:[],stock:[{id:uid(),item:"Paracetamol 500 mg",batch:"B-001",exp:"2027-06-30",qty:400,min:100},{id:uid(),item:"Amoxicillin 250 mg",batch:"B-014",exp:"2026-12-31",qty:60,min:100},{id:uid(),item:"Malaria RDT",batch:"M-220",exp:"2027-02-28",qty:150,min:50}],patients:p,encounters:e,orders:o,imm:[],audit:[],role:"Doctor",view:"dashboard",sel:null,q:"",users:[{name:"Demo Doctor",role:"Doctor"},{name:"Demo Nurse",role:"Nurse"},{name:"Demo Pharmacist",role:"Pharmacist"},{name:"Demo Lab Tech",role:"Lab technician"},{name:"Demo HIS Officer",role:"Records / HIS"},{name:"Demo Admin",role:"Admin"}]};
 }
 function log(a){S.audit.unshift({ts:new Date().toISOString().replace("T"," ").slice(0,19),user:S.role,a});S.audit=S.audit.slice(0,300);save()}
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -99,7 +100,7 @@ function setRole(r){S.role=r;if(!ROLES[r].includes(S.view))S.view="dashboard";lo
 function go(v){S.view=v;S.sel=null;document.getElementById("side").classList.remove("open");save();render()}
 function render(){
   const allowed=ROLES[S.role];
-  let h='<h1>EMR Prototype</h1><div class="sub">Community clinic · outpatient</div>',pend=null;
+  let h='<div class="logo"><img src="assets/mtc-logo.png" alt="Mae Tao Clinic" onerror="this.style.display=\'none\'"></div><h1>Clinic EMR</h1><div class="sub">Prototype · demo data</div>',pend=null;
   NAV.forEach(n=>{if(n.length===1){pend=n[0];return}
     if(!allowed.includes(n[2]))return;
     if(pend){h+=`<div class="grp">${pend}</div>`;pend=null}
@@ -116,29 +117,36 @@ V.dashboard=()=>{
   const pl=S.orders.filter(o=>o.kind==="lab"&&o.status==="Pending").length,pr=S.orders.filter(o=>o.kind==="rx"&&o.status==="Pending").length,rf=S.orders.filter(o=>o.kind==="referral"&&o.status==="Pending").length;
   const te=S.encounters.filter(e=>e.date===today()).length;
   const card=(n,l,v)=>`<div class="card" onclick="go('${v}')" style="cursor:pointer"><b>${n}</b><span>${l}</span></div>`;
-  return `<div class="cards">${card(S.patients.length,"Registered patients","patients")}${card(te,"Encounters today","encounters")}${card(pl,"Lab orders pending","lab")}${card(pr,"Prescriptions to dispense","pharmacy")}${card(rf,"Referrals open","referrals")}</div>
+  return `<div class="cards">${card(S.patients.length,"Registered patients","patients")}${card(te,"Encounters today","encounters")}${card(pl,"Lab orders pending","lab")}${card(pr,"Prescriptions to dispense","pharmacy")}${card(rf,"Referrals open","referrals")}${card(S.stock.filter(i=>i.qty<=i.min).length,"Low-stock items","stock")}${card(S.anc.filter(a=>a.danger.length).length,"ANC danger-sign alerts","anc")}</div>
   <div class="panel"><h3 style="margin-top:0">Recent encounters</h3>${encTable(S.encounters.slice(0,8))}</div>`;
 };
 function encTable(list){
   if(!list.length)return '<p class="note">No encounters yet.</p>';
   return `<div class="tablewrap"><table><tr><th>Date</th><th>Patient</th><th>Type</th><th>Diagnosis</th><th>Status</th></tr>${list.map(e=>{const p=pat(e.pid);return `<tr><td>${e.date}</td><td><a href="#" onclick="openPatient('${e.pid}');return false" style="color:var(--accent)">${esc(p?.name)}</a></td><td>${esc(e.type)}</td><td>${e.dx.map(c=>esc(c)+" "+esc(dxName(c))).join("<br>")||"—"}</td><td><span class="tag ${e.status==="Closed"?"done":"pending"}">${e.status}</span></td></tr>`}).join("")}</table></div>`;
 }
-function openPatient(id){S.view="patients";S.sel=id;save();render()}
+function openPatient(id){const p=pat(id);
+  if(p&&p.restricted&&S.sel!==id){const r=prompt("Restricted record. Enter the reason for access (this is logged):");if(!r||!r.trim())return;log("BREAK-GLASS access to "+p.mrn+": "+r.trim())}
+  S.view="patients";S.sel=id;save();render()}
 
 V.patients=()=>{
   if(S.sel==="new")return regForm();
   if(S.sel)return patientDetail(pat(S.sel));
   const q=S.q.toLowerCase();
-  const list=S.patients.filter(p=>!q||(p.name+p.mrn+p.phone).toLowerCase().includes(q));
+  const list=S.patients.filter(p=>!q||(p.name+p.mrn+p.phone+(p.local||'')+(p.idn||'')).toLowerCase().includes(q));
   return `<div class="row"><input placeholder="Search name, MRN, phone" value="${esc(S.q)}" oninput="S.q=this.value;render2()" id="q" style="flex:1;min-width:200px"><button class="pri" onclick="S.sel='new';render()">+ Register patient</button></div>
-  <div class="panel tablewrap"><table><tr><th>MRN</th><th>Name</th><th>Sex</th><th>Age</th><th>Village</th></tr>${list.map(p=>`<tr style="cursor:pointer" onclick="openPatient('${p.id}')"><td>${esc(p.mrn)}</td><td>${esc(p.name)}</td><td>${p.sex}</td><td>${age(p.dob)}</td><td>${esc(p.village)}</td></tr>`).join("")||'<tr><td colspan=5 class="note">No match</td></tr>'}</table></div>`;
+  <div class="panel tablewrap"><table><tr><th>MRN</th><th>Name</th><th>Sex</th><th>Age</th><th>Village</th></tr>${list.map(p=>`<tr style="cursor:pointer" onclick="openPatient('${p.id}')"><td>${esc(p.mrn)}</td><td>${esc(p.name)}${p.local?' <span class="note">'+esc(p.local)+'</span>':''}${p.restricted?' <span class="tag warn">restricted</span>':''}</td><td>${p.sex}</td><td>${age(p.dob)}</td><td>${esc(p.village)}</td></tr>`).join("")||'<tr><td colspan=5 class="note">No match</td></tr>'}</table></div>`;
 };
 function render2(){const pos=document.getElementById("q").selectionStart;render();const q=document.getElementById("q");q.focus();q.setSelectionRange(pos,pos)}
 function regForm(){return `<div class="panel"><h3 style="margin-top:0">Register patient</h3>
   <div class="grid">
-  <label>Full name<input id="r_name"></label>
+  <label>Full name (English)<input id="r_name"></label>
+  <label>Name in own script (Burmese / Karen / Thai)<input id="r_local"></label>
+  <label>ID document<select id="r_idt"><option value="">None</option><option>Thai ID</option><option>Myanmar ID</option><option>UNHCR / camp card</option><option>Passport</option><option>Other</option></select></label>
+  <label>ID number<input id="r_idn"></label>
   <label>Sex<select id="r_sex"><option>F</option><option>M</option><option>Other</option></select></label>
   <label>Date of birth<input type="date" id="r_dob"></label>
+  <label>Age is estimated<select id="r_est"><option value="">No</option><option value="1">Yes</option></select></label>
+  <label>Sensitive / restricted record<select id="r_res"><option value="">No</option><option value="1">Yes (access needs a reason)</option></select></label>
   <label>Phone<input id="r_phone"></label>
   <label>Village / address<input id="r_vil"></label>
   <label>Known allergies<input id="r_all" placeholder="e.g. Penicillin"></label></div>
@@ -149,7 +157,7 @@ function savePatient(){
   if(!g("r_name")||!g("r_dob")){alert("Name and date of birth are required.");return}
   const dup=S.patients.find(p=>p.name.toLowerCase()===g("r_name").toLowerCase()&&p.dob===g("r_dob"));
   if(dup&&!confirm("A patient with the same name and date of birth exists ("+dup.mrn+"). Register anyway?"))return;
-  const p={id:uid(),mrn:"MTC-"+(1001+S.patients.length),name:g("r_name"),sex:g("r_sex"),dob:g("r_dob"),phone:g("r_phone"),village:g("r_vil"),allergies:g("r_all"),createdAt:today()};
+  const p={id:uid(),mrn:"MTC-"+(1001+S.patients.length),local:g("r_local"),idt:g("r_idt"),idn:g("r_idn"),est:g("r_est"),restricted:g("r_res"),name:g("r_name"),sex:g("r_sex"),dob:g("r_dob"),phone:g("r_phone"),village:g("r_vil"),allergies:g("r_all"),createdAt:today()};
   S.patients.push(p);log("Registered patient "+p.mrn);S.sel=p.id;save();render();
 }
 function patientDetail(p){
@@ -158,7 +166,7 @@ function patientDetail(p){
   const can=ROLES[S.role].includes("encounters");
   return `<div class="row"><button onclick="S.sel=null;render()">← Back</button></div>
   <div class="panel"><h3 style="margin-top:0">${esc(p.name)} <span class="tag">${esc(p.mrn)}</span></h3>
-  <div>${p.sex} · ${age(p.dob)} · DOB ${p.dob} · ${esc(p.village)} ${p.phone?"· "+esc(p.phone):""}</div>
+  <div>${p.sex} · ${age(p.dob)}${p.est?' (estimated)':''} · DOB ${p.dob} · ${esc(p.village)}${p.idt?' · '+esc(p.idt)+' '+esc(p.idn):' · no ID document'} ${p.phone?"· "+esc(p.phone):""}</div>
   ${p.allergies?`<div class="banner">⚠ Allergies: ${esc(p.allergies)}</div>`:'<div class="note">No known allergies recorded</div>'}
   ${can?`<div class="row"><button class="pri" onclick="newEnc('${p.id}')">+ New encounter</button></div>`:""}</div>
   <h3>Encounters</h3><div class="panel">${encTable(encs)}</div>
@@ -237,9 +245,50 @@ V.immunization=()=>`<div class="panel"><h3 style="margin-top:0">Record vaccinati
   <label>Dose #<input id="i_d" type="number" min="1" value="1"></label>
   <label>Date<input id="i_dt" type="date" value="${today()}"></label></div>
   <div class="row"><button class="pri" onclick="addImm()">Save</button></div></div>
+  <h3>Children under 5 with vaccines not yet recorded</h3><div class="panel">${S.patients.filter(p=>(Date.now()-new Date(p.dob))/31557600000<5).map(p=>{const got=S.imm.filter(i=>i.pid===p.id).map(i=>i.vaccine),miss=VACCINES.filter(v=>!["Tetanus-diphtheria (Td)","COVID-19"].includes(v)&&!got.includes(v));return `<div><b>${esc(p.name)}</b> (${age(p.dob)}): ${miss.length?'<span class="tag pending">due/missing: '+miss.join(", ")+'</span>':'<span class="tag done">up to date</span>'}</div>`}).join("")||'<p class="note">No children registered</p>'}<p class="note">Simplified check: lists routine vaccines with no dose recorded. A real schedule would use age-based due dates.</p></div>
   <h3>Register</h3><div class="panel tablewrap"><table><tr><th>Date</th><th>Patient</th><th>Vaccine</th><th>Dose</th></tr>${S.imm.map(i=>`<tr><td>${i.date}</td><td>${esc(pat(i.pid)?.name)}</td><td>${esc(i.vaccine)}</td><td>${esc(i.dose)}</td></tr>`).join("")||'<tr><td colspan=4 class="note">None</td></tr>'}</table></div>`;
 function addImm(){const g=i=>document.getElementById(i).value;
   S.imm.unshift({id:uid(),pid:g("i_p"),vaccine:g("i_v"),dose:g("i_d"),date:g("i_dt")});log("Recorded vaccination");save();render()}
+
+
+function ga(lmp){const d=Math.floor((Date.now()-new Date(lmp))/86400000);return Math.floor(d/7)+"w "+d%7+"d"}
+function edd(lmp){const d=new Date(lmp);d.setDate(d.getDate()+280);return d.toISOString().slice(0,10)}
+V.anc=()=>{
+  const fem=S.patients.filter(p=>p.sex==="F");
+  const risks=["Age under 18 or over 35","Previous caesarean","Previous stillbirth","Hypertension","Diabetes","Anaemia","HIV positive","Multiple pregnancy"];
+  return `<div class="panel"><h3 style="margin-top:0">Record antenatal visit</h3><div class="grid">
+  <label>Patient<select id="a_p">${fem.map(p=>`<option value="${p.id}">${esc(p.mrn)} · ${esc(p.name)}</option>`).join("")}</select></label>
+  <label>Last menstrual period (LMP)<input type="date" id="a_lmp"></label>
+  <label>Gravida<input type="number" id="a_g" min="1" value="1"></label>
+  <label>Para<input type="number" id="a_pa" min="0" value="0"></label>
+  <label>BP (mmHg)<input id="a_bp" placeholder="120/80"></label>
+  <label>Weight (kg)<input id="a_wt"></label>
+  <label>Fundal height (cm)<input id="a_fh"></label>
+  <label>Fetal heart rate<input id="a_fhr"></label></div>
+  <label style="margin-top:8px">Risk factors</label><div class="row">${risks.map((r,i)=>`<label style="display:flex;gap:4px;margin:0;color:var(--text)"><input type="checkbox" class="a_r" value="${esc(r)}" style="width:auto"> ${r}</label>`).join("")}</div>
+  <label style="margin-top:8px">Danger signs</label><div class="row">${["Bleeding","Severe headache / blurred vision","Fits","Reduced fetal movement","Fever","Leaking fluid"].map(r=>`<label style="display:flex;gap:4px;margin:0;color:var(--text)"><input type="checkbox" class="a_d" value="${r}" style="width:auto"> ${r}</label>`).join("")}</div>
+  <div class="row"><button class="pri" onclick="saveAnc()">Save visit</button></div>
+  <p class="note">The expected delivery date (EDD) is worked out from the LMP (LMP + 280 days).</p></div>
+  <h3>Antenatal register</h3><div class="panel tablewrap"><table><tr><th>Date</th><th>Patient</th><th>Gestation</th><th>EDD</th><th>G/P</th><th>BP</th><th>Alerts</th></tr>${S.anc.map(a=>`<tr><td>${a.date}</td><td>${esc(pat(a.pid)?.name)}</td><td>${ga(a.lmp)}</td><td>${edd(a.lmp)}</td><td>${a.g}/${a.pa}</td><td>${esc(a.bp)}</td><td>${a.danger.length?`<span class="tag warn">DANGER: ${esc(a.danger.join(", "))}</span> `:""}${a.risks.length?`<span class="tag pending">${a.risks.length} risk factor(s)</span>`:""}</td></tr>`).join("")||'<tr><td colspan=7 class="note">No visits recorded</td></tr>'}</table></div>`;
+};
+function saveAnc(){
+  const g=i=>document.getElementById(i).value.trim(),cl=c=>[...document.querySelectorAll("."+c+":checked")].map(x=>x.value);
+  if(!g("a_p")||!g("a_lmp")){alert("Select a patient and enter the LMP.");return}
+  const a={id:uid(),pid:g("a_p"),date:today(),lmp:g("a_lmp"),g:g("a_g"),pa:g("a_pa"),bp:g("a_bp"),wt:g("a_wt"),fh:g("a_fh"),fhr:g("a_fhr"),risks:cl("a_r"),danger:cl("a_d")};
+  S.anc.unshift(a);log("Recorded antenatal visit for "+pat(a.pid).mrn);save();
+  if(a.danger.length)alert("DANGER SIGNS recorded: "+a.danger.join(", ")+". Refer or escalate to a doctor now.");
+  render();
+}
+V.stock=()=>{
+  const low=i=>i.qty<=i.min,exp=i=>(new Date(i.exp)-Date.now())/86400000<90;
+  return `<div class="panel"><h3 style="margin-top:0">Add / receive stock</h3><div class="grid">
+  <label>Item<input id="k_item"></label><label>Batch<input id="k_batch"></label><label>Expiry<input type="date" id="k_exp"></label><label>Quantity<input type="number" id="k_qty"></label><label>Reorder level<input type="number" id="k_min" value="50"></label></div>
+  <div class="row"><button class="pri" onclick="addStock()">Save</button></div></div>
+  <h3>Stock on hand</h3><div class="panel tablewrap"><table><tr><th>Item</th><th>Batch</th><th>Expiry</th><th>Qty</th><th>Alert</th></tr>${S.stock.map(i=>`<tr><td>${esc(i.item)}</td><td>${esc(i.batch)}</td><td>${i.exp}</td><td>${i.qty}</td><td>${low(i)?'<span class="tag warn">Low stock</span> ':''}${exp(i)?'<span class="tag warn">Expires within 90 days</span>':''}</td></tr>`).join("")}</table></div>`;
+};
+function addStock(){const g=i=>document.getElementById(i).value.trim();
+  if(!g("k_item")||!g("k_qty")){alert("Item and quantity are required.");return}
+  S.stock.push({id:uid(),item:g("k_item"),batch:g("k_batch"),exp:g("k_exp")||"2099-01-01",qty:+g("k_qty"),min:+g("k_min")||0});log("Received stock: "+g("k_item"));save();render()}
 
 V.reports=()=>{
   const c={};S.encounters.forEach(e=>e.dx.forEach(d=>c[d]=(c[d]||0)+1));
