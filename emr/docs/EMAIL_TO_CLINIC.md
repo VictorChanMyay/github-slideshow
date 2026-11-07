@@ -2,10 +2,12 @@
 
 Fill the brackets. Send it yourself from your own address; keep it short. Attach nothing with patient data (there is none). Consider attaching `docs/HANDOVER.md` as a PDF, or just offer it.
 
-**To:** [name and address of the person you were advised to contact: leadership, Health Services lead, or Tech Team]
-**Subject:** Volunteer offer: a free electronic medical record prototype for Mae Tao Clinic
+**To:** recruitment@maetaoclinic.org
+**Subject:** Volunteer offer (not a job application): free EMR prototype. Please forward to the IT / health information team
 
-Dear [Name],
+Dear Mae Tao Clinic team,
+
+I am writing to this address because I do not know who the right person is. **Could you please forward this message to the person who looks after health information or IT, or tell me who that is?** Thank you.
 
 My name is [your name]. I teach IT at [school name] in Mae Sot, and I work legally in Thailand under my teaching visa. I admire the clinic's work for people from Myanmar, and I would like to contribute my skills as a volunteer, without payment.
 
@@ -26,7 +28,13 @@ Kind regards,
 
 ---
 
+## Other greetings you can use
+- If you learn a name later: `Dear Ms/Mr [Family name],` (ask what they prefer; do not guess from a name).
+- If you learn only a department: `Dear Health Information Systems team,` or `Dear IT team,`.
+- Never `Dear Sir/Madam`: it feels like a mass email.
+
 ## Notes before you send
+- The recruitment address is usually read by HR, who are not the right people for this. The first paragraph asks them to forward it. If you hear nothing in a week, ask a friend or contact at the clinic for the right name, or call the clinic.
 - Check the facts in the email against what you can confirm: the job posting, who to address, your visa status wording (only what is true for you).
 - Do not promise dates, features or support after you leave; the meeting is for listening.
 - Ask whether the clinic wants a short **volunteer agreement** (confidentiality, ownership of the code, no real data until approved).
