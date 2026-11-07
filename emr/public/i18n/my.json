@@ -188,5 +188,16 @@
 "child.imm.status.overdue": "နောက်ကျနေ",
 "child.imm.status.upcoming": "လာမည့်",
 "child.tab.immunization": "ထိုးရန်ကျန်သူများ",
-"child.tab.nutrition": "အာဟာရ"
+"child.tab.nutrition": "အာဟာရ",
+"nav.programs": "ကုသမှုအစီအစဉ်များ",
+"prog.title": "ကုသမှုအစီအစဉ်များ",
+"prog.name.tb": "တီဘီ",
+"prog.name.hiv": "HIV",
+"prog.name.malaria": "ငှက်ဖျား",
+"prog.name.nutrition": "အာဟာရချို့တဲ့မှု",
+"prog.name.chronic": "ရောဂါရှည်ကြာခံ",
+"prog.active": "လက်ရှိ",
+"prog.tab.recall": "ပြန်လည်ခေါ်ယူရန်စာရင်း",
+"prog.record_visit": "ဆေးခန်းလာမှု မှတ်တမ်းတင်ရန်",
+"prog.close": "မှတ်တမ်းပိတ်ရန်"
 }

@@ -17,11 +17,11 @@ function formKit() {
     num(key, label, o = {}) { const el = h('input', { type: 'number', id: 'mf_' + key, step: o.step || 'any', inputmode: 'decimal', min: o.min, max: o.max }); getters[key] = () => el.value; const n = labelOf(label, el, key); nodes.push(n); return n; },
     text(key, label, o = {}) { const el = h('input', { id: 'mf_' + key, placeholder: o.placeholder }); getters[key] = () => el.value; const n = labelOf(label, el, key); nodes.push(n); return n; },
     date(key, label, value) { const el = h('input', { type: 'date', id: 'mf_' + key, value: value || '' }); getters[key] = () => el.value; const n = labelOf(label, el, key); nodes.push(n); return n; },
-    select(key, label, list, prefix, o = {}) { const el = h('select', { id: 'mf_' + key }, o.blank === false ? null : h('option', { value: '' }, '—'), list.map((x) => h('option', { value: x }, o.raw ? x : t('mch.' + prefix + '.' + x)))); if (o.value) el.value = o.value; getters[key] = () => el.value; const n = labelOf(label, el, key); nodes.push(n); return n; },
+    select(key, label, list, prefix, o = {}) { const el = h('select', { id: 'mf_' + key }, o.blank === false ? null : h('option', { value: '' }, '—'), list.map((x) => h('option', { value: x }, o.custom ? o.custom(x) : o.raw ? x : t('mch.' + prefix + '.' + x)))); if (o.value) el.value = o.value; getters[key] = () => el.value; const n = labelOf(label, el, key); nodes.push(n); return n; },
     check(key, label, checked) { const el = h('input', { type: 'checkbox', id: 'mf_' + key }); el.checked = !!checked; getters[key] = () => el.checked; const n = h('label', { class: 'check', for: 'mf_' + key }, el, label); nodes.push(n); return n; },
     area(key, label) { const el = h('textarea', { rows: 2, id: 'mf_' + key }); getters[key] = () => el.value; const n = labelOf(label, el, key); nodes.push(n); return n; },
-    checks(key, label, list, prefix) { const boxes = list.map((x) => { const el = h('input', { type: 'checkbox', value: x }); return el; }); getters[key] = () => boxes.filter((b) => b.checked).map((b) => b.value);
-      return h('div', {}, h('div', { class: 'note' }, label), h('div', { class: 'checks' }, list.map((x, i) => h('label', { class: 'check' }, boxes[i], t('mch.' + prefix + '.' + x))))); },
+    checks(key, label, list, prefix, custom) { const boxes = list.map((x) => { const el = h('input', { type: 'checkbox', value: x }); return el; }); getters[key] = () => boxes.filter((b) => b.checked).map((b) => b.value);
+      return h('div', {}, h('div', { class: 'note' }, label), h('div', { class: 'checks' }, list.map((x, i) => h('label', { class: 'check' }, boxes[i], custom ? custom(x) : t('mch.' + prefix + '.' + x))))); },
     values() { return Object.fromEntries(Object.entries(getters).map(([k, g]) => [k, g()])); },
   };
   return kit;

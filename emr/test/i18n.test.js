@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const dir = path.join(__dirname, '..', 'public');
 const en = JSON.parse(fs.readFileSync(path.join(dir, 'i18n', 'en.json'), 'utf8'));
-const src = ['app.js', 'clinical.js', 'orders.js', 'mch.js', 'child.js'].map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
+const src = ['app.js', 'clinical.js', 'orders.js', 'mch.js', 'child.js', 'programs.js'].map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
 
 test('every literal t("key") used in the screens exists in English', () => {
   const keys = [...src.matchAll(/\bt\('([A-Za-z0-9_.]+)'\)/g)].map((m) => m[1]);
@@ -71,4 +71,22 @@ test('every child-health flag, status and reason from the server has text', () =
   for (const k of ['waz', 'haz', 'whz', 'baz', 'hcz']) assert.ok(`child.z.${k}` in en, k);
   for (const k of ['wfa', 'hfa', 'wfh', 'bfa', 'hcfa']) assert.ok(`child.chart.${k}` in en, k);
   for (const k of ['given_here', 'card', 'birth_record']) assert.ok(`child.source.${k}` in en, k);
+});
+
+test('every programme field, option, outcome and flag from the server has text', () => {
+  const { PROGRAMS } = require('../lib/programs_spec'); const R = require('../lib/programs_rules');
+  const outs = new Set();
+  for (const [k, p] of Object.entries(PROGRAMS)) {
+    assert.ok(`prog.name.${k}` in en, k);
+    for (const f of p.enrol.concat(p.visit)) { assert.ok(`prog.f.${f.key}` in en, f.key); for (const v of f.values || []) assert.ok(`prog.o.${f.key}.${v}` in en, `${f.key}.${v}`); }
+    p.outcomes.forEach((o) => outs.add(o));
+  }
+  for (const o of outs) assert.ok(`prog.outcome.${o}` in en, o);
+  for (const c of R.FLAG_CODES) assert.ok(`prog.flag.${c}` in en, c);
+  const rules = fs.readFileSync(path.join(__dirname, '..', 'lib', 'programs_rules.js'), 'utf8');
+  const used = new Set([...rules.matchAll(/add\('([a-z_0-9]+)'/g)].map((m) => m[1])); assert.ok(used.size >= 30);
+  for (const c of used) assert.ok(R.FLAG_CODES.includes(c), 'FLAG_CODES is missing ' + c); // a new rule cannot ship without a listed, translated flag
+  for (const r of ['cured_needs_confirmed', 'cured_needs_negative_smears', 'recovered_but_positive', 'nutrition_cured_needs_criteria']) assert.ok(`prog.reason.${r}` in en, r);
+  for (const s of ['done', 'due', 'overdue', 'upcoming']) assert.ok(`prog.sched.${s}` in en, s);
+  for (const s of ['month2', 'month5', 'end_of_treatment', 'day3', 'day28']) assert.ok(`prog.sched_key.${s}` in en, s);
 });

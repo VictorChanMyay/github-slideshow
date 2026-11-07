@@ -38,6 +38,8 @@ async function openPatient(pid) {
   if (r.status === 403) { alert(t('restricted.denied')); return; }
   if (!r.ok) { if (r.status !== 428) oops(r); return; }
   state.patient = r.data.patient; state.clinical = r.data.allergies ? { allergies: r.data.allergies, problems: r.data.problems, encounters: r.data.encounters } : null; // clerks get no clinical data
+  state.programs = null;
+  if (can('prog.read')) { await loadProgMeta(); const pr = await withAccess(pid, () => api('GET', `/api/patients/${pid}/programs`)); if (pr.ok) state.programs = pr.data.enrolments; }
   state.child = null;
   if (can('child.read')) { await loadChildMeta(); const cr = await withAccess(pid, () => api('GET', `/api/patients/${pid}/child`)); if (cr.ok && cr.data.is_child) state.child = cr.data; }
   state.mch = null;

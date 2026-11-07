@@ -221,6 +221,23 @@ const MIGRATIONS = [
   );
   CREATE INDEX growth_patient ON growth_measurements(patient_id);
   `,
+  // 6: programmes (TB, HIV, malaria, malnutrition, chronic disease)
+  `
+  CREATE TABLE program_enrolments(
+    id INTEGER PRIMARY KEY, patient_id INTEGER NOT NULL REFERENCES patients(id), program TEXT NOT NULL CHECK(program IN ('tb','hiv','malaria','nutrition','chronic')),
+    condition TEXT NOT NULL DEFAULT '', registration_no TEXT NOT NULL UNIQUE, enrolled_on TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','closed')),
+    outcome TEXT, outcome_on TEXT, outcome_note TEXT, details TEXT NOT NULL DEFAULT '{}', next_due TEXT, contact_consent INTEGER NOT NULL DEFAULT 0,
+    enrolled_by INTEGER REFERENCES users(id), created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE UNIQUE INDEX one_active_enrolment ON program_enrolments(patient_id, program, condition) WHERE status='active';
+  CREATE INDEX enrol_patient ON program_enrolments(patient_id);
+  CREATE INDEX enrol_status ON program_enrolments(program, status);
+  CREATE TABLE program_visits(
+    id INTEGER PRIMARY KEY, enrolment_id INTEGER NOT NULL REFERENCES program_enrolments(id), visit_date TEXT NOT NULL, encounter_id INTEGER REFERENCES encounters(id),
+    data TEXT NOT NULL DEFAULT '{}', growth_id INTEGER REFERENCES growth_measurements(id), next_due TEXT, recorded_by INTEGER REFERENCES users(id), recorded_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX pvisit_enrol ON program_visits(enrolment_id);
+  `,
 ];
 
 function open(file) {

@@ -43,7 +43,7 @@ Doctor/medic, Nurse, Midwife, Pharmacist, Lab technician, Registration clerk, HI
 | M3 ✅ | Orders: lab and pharmacy | Lab orders/results with reference ranges, drug formulary, prescribing with allergy and duplicate checks, dispensing that decreases stock, stock batches/expiry alerts |
 | M4 ✅ | Reproductive, maternal and child health | Antenatal episodes/visits, risk and danger-sign alerts, EDD, delivery/partograph summary, newborn, postnatal, family planning, mother-baby link |
 | M5 ✅ | Child health | Immunization schedule with due/overdue, growth charts (WHO z-scores), nutrition screening |
-| M6 | Programs | TB, HIV (extra confidentiality), malaria, chronic disease follow-up with recall lists |
+| M6 ✅ | Programs | TB, HIV (extra confidentiality), malaria, chronic disease follow-up with recall lists |
 | M7 | Referrals and continuity | Referral out/back, printable referral and discharge summaries, appointments and reminders |
 | M8 | Inpatient and procedures | Admissions, beds, ward notes, discharge, procedures log, blood bank inventory |
 | M9 | Reporting | Morbidity, MCH, immunization, stock, workload; donor report templates; CSV/Excel export; dashboards |
@@ -73,3 +73,11 @@ Scope warning: "everything" is about 10 milestones. Plan to show M1–M3 to the 
 ## 8. Questions that will shape later milestones
 
 See `emr-prototype/DISCOVERY_QUESTIONS.md`. Answers on forms, drug list, lab list, donor indicators and languages will adjust M2–M9.
+
+## M6 design decisions (programmes) - to confirm with the clinic
+- One generic "enrolment + visits" model for TB, HIV, malaria, malnutrition (SAM/MAM) and chronic disease (hypertension, diabetes, asthma, epilepsy). Rules, schedules and thresholds are DRAFT and live in `lib/programs_rules.js`.
+- **HIV is the most protected programme:** even the *existence* of an HIV enrolment is hidden from roles without `hiv.read` (it is left out of patient pages, registers and recall lists, not just masked). Every view is logged. HIV status inside a TB record is masked the same way, and only `hiv.write` can set it.
+- **Contact consent:** a recall list shows a phone number only if the patient agreed to be contacted for that programme.
+- **Nobody is closed automatically.** The system suggests "lost to follow-up" after a programme-specific delay; a clinician closes the record with an outcome. Outcome rules follow WHO-style definitions (for example TB "cured" needs a confirmed diagnosis and negative smears), and the system refuses an outcome the data do not support.
+- **Nutrition programme** uses the M5 growth measurements: each follow-up visit also saves a growth record, so charts stay current.
+- Not in M6: TB contact tracing, drug-resistant TB regimens, ART regimen switching rules, DOT observer records, PMTCT infant testing schedule. These need the clinic's protocols.

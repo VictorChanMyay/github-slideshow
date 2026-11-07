@@ -32,17 +32,21 @@ const P = {
   'imm.write': 'Record and void vaccinations',
   'growth.write': 'Record growth measurements',
   'imm.admin': 'Edit the immunization schedule',
+  'prog.read': 'View TB, malaria, nutrition and chronic-disease programme records',
+  'prog.write': 'Enrol patients and record programme visits (not HIV)',
+  'hiv.read': 'See that a patient is in the HIV programme and view the record (every view is logged)',
+  'hiv.write': 'Enrol patients in the HIV programme and record HIV visits and HIV status',
 };
 const ROLES = {
-  doctor: ['patient.read', 'patient.write', 'patient.restricted', 'queue.read', 'encounter.read', 'encounter.checkin', 'triage.write', 'consult.write', 'consult.sign', 'allergy.write', 'problem.write', 'lab.order', 'lab.read', 'lab.sensitive', 'rx.write', 'rx.read', 'stock.read', 'mch.read', 'mch.write', 'fp.write', 'child.read', 'imm.write', 'growth.write'],
-  nurse: ['patient.read', 'patient.write', 'queue.read', 'encounter.read', 'encounter.checkin', 'triage.write', 'allergy.write', 'lab.read', 'lab.collect', 'rx.read', 'stock.read', 'mch.read', 'fp.write', 'child.read', 'imm.write', 'growth.write'],
-  midwife: ['patient.read', 'patient.write', 'queue.read', 'encounter.read', 'encounter.checkin', 'triage.write', 'consult.write', 'consult.sign', 'allergy.write', 'problem.write', 'lab.order', 'lab.read', 'lab.collect', 'lab.sensitive', 'rx.write', 'rx.read', 'stock.read', 'mch.read', 'mch.write', 'fp.write', 'child.read', 'imm.write', 'growth.write'],
+  doctor: ['patient.read', 'patient.write', 'patient.restricted', 'queue.read', 'encounter.read', 'encounter.checkin', 'triage.write', 'consult.write', 'consult.sign', 'allergy.write', 'problem.write', 'lab.order', 'lab.read', 'lab.sensitive', 'rx.write', 'rx.read', 'stock.read', 'mch.read', 'mch.write', 'fp.write', 'child.read', 'imm.write', 'growth.write', 'prog.read', 'prog.write', 'hiv.read', 'hiv.write'],
+  nurse: ['patient.read', 'patient.write', 'queue.read', 'encounter.read', 'encounter.checkin', 'triage.write', 'allergy.write', 'lab.read', 'lab.collect', 'rx.read', 'stock.read', 'mch.read', 'fp.write', 'child.read', 'imm.write', 'growth.write', 'prog.read', 'prog.write', 'hiv.read', 'hiv.write'],
+  midwife: ['patient.read', 'patient.write', 'queue.read', 'encounter.read', 'encounter.checkin', 'triage.write', 'consult.write', 'consult.sign', 'allergy.write', 'problem.write', 'lab.order', 'lab.read', 'lab.collect', 'lab.sensitive', 'rx.write', 'rx.read', 'stock.read', 'mch.read', 'mch.write', 'fp.write', 'child.read', 'imm.write', 'growth.write', 'prog.read', 'prog.write', 'hiv.read', 'hiv.write'],
   pharmacist: ['patient.read', 'encounter.read', 'rx.read', 'rx.dispense', 'stock.read', 'stock.write'],
   lab: ['patient.read', 'lab.read', 'lab.collect', 'lab.result', 'lab.sensitive'],
   registration: ['patient.read', 'patient.write', 'queue.read', 'encounter.checkin'],
-  his: ['patient.read', 'patient.write', 'patient.restricted', 'audit.read', 'queue.read', 'encounter.read', 'lab.read', 'rx.read', 'stock.read', 'mch.read', 'child.read'],
-  program: ['patient.read', 'patient.restricted', 'encounter.read', 'lab.read', 'lab.sensitive', 'mch.read', 'child.read'],
-  admin: ['patient.read', 'patient.write', 'patient.restricted', 'audit.read', 'user.admin', 'queue.read', 'encounter.read', 'encounter.checkin', 'triage.write', 'consult.write', 'consult.sign', 'allergy.write', 'problem.write', 'lab.read', 'rx.read', 'stock.read', 'stock.write', 'formulary.admin', 'mch.read', 'child.read', 'imm.admin'],
+  his: ['patient.read', 'patient.write', 'patient.restricted', 'audit.read', 'queue.read', 'encounter.read', 'lab.read', 'rx.read', 'stock.read', 'mch.read', 'child.read', 'prog.read'],
+  program: ['patient.read', 'patient.restricted', 'encounter.read', 'lab.read', 'lab.sensitive', 'mch.read', 'child.read', 'prog.read', 'prog.write', 'hiv.read', 'hiv.write'],
+  admin: ['patient.read', 'patient.write', 'patient.restricted', 'audit.read', 'user.admin', 'queue.read', 'encounter.read', 'encounter.checkin', 'triage.write', 'consult.write', 'consult.sign', 'allergy.write', 'problem.write', 'lab.read', 'rx.read', 'stock.read', 'stock.write', 'formulary.admin', 'mch.read', 'child.read', 'imm.admin', 'prog.read'],
 };
 const can = (role, perm) => (ROLES[role] || []).includes(perm);
 module.exports = { P, ROLES, can };
