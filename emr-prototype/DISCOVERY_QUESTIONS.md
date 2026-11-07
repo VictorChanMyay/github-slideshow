@@ -1,5 +1,7 @@
 # Discovery Questions for Mae Tao Clinic (before building the EMR)
 
+Context: this is an outside, volunteer (pro bono) offer, not a job application. Be clear about that in the first meeting.
+
 Purpose: learn how the clinic really works, what already exists, and what limits apply, so the EMR fits the clinic instead of the other way round. Answers update `PROPOSAL.md`, where items are still marked "to confirm".
 
 How to use: start with the **First meeting (12 questions)**. Use the detailed sections afterwards with the right people. Mark each answer with who gave it and the date.
@@ -19,7 +21,7 @@ Also ask to see, not only be told: paper forms, registers, current HIS screens, 
 7. How reliable are electricity and internet in each building?
 8. What computers, tablets and phones do staff have today?
 9. How are patients without ID registered today? Which ID types do patients carry?
-10. What is the budget and timeline for licences (e.g., Retool), hosting and training? Who pays after the pilot?
+10. This is a volunteer offer with no fee. What can the clinic fund for hosting, licences (e.g., Retool) and training, and who pays after the pilot?
 11. Who decides data-sharing and privacy rules? Is there a data protection officer or a policy?
 12. Can we have the official logo files, brand guidelines and the latest Annual Report?
 
@@ -114,6 +116,17 @@ Also ask to see, not only be told: paper forms, registers, current HIS screens, 
 - Is there an incident response plan, including notifying the regulator within 72 hours if a breach affects personal data?
 - Who approves user accounts, and how are leavers removed?
 - Has the clinic done any data protection or security review?
+
+## K2. Working with a volunteer (leadership, HR/administration)
+
+- Is the clinic open to a volunteer helping with the EMR? Who would the volunteer report to?
+- Does the clinic have a volunteer agreement, confidentiality agreement or code of conduct to sign?
+- Are there rules about volunteers' access to patient data, systems and devices?
+- Does volunteering (on site or remotely) need any permit or approval? Who advises on this?
+- How should the volunteer's time be arranged (hours per week, on site or remote)?
+- Who owns the code, documents and data produced? In which repository will they be kept?
+- Who on the clinic's side will maintain the system after the volunteer finishes?
+- Is the in-house Tech Team willing to review the work and share responsibility?
 
 ## K. Data migration and history
 

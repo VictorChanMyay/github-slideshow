@@ -6,7 +6,7 @@ Status: working draft for discussion. Facts about the clinic come from public we
 
 ## 1. Purpose of this proposal
 
-Design an Electronic Medical Record (EMR) for Mae Tao Clinic (MTC) that matches how the clinic really works, instead of copying a hospital system built for a different setting. The Health Department's Software Developer role (Retool-based EMR, JavaScript/SQL/REST) is the delivery vehicle.
+Offer Mae Tao Clinic (MTC) a volunteer, pro bono contribution: design and help build an Electronic Medical Record (EMR) that matches how the clinic really works, instead of copying a hospital system built for a different setting. This is an outside proposal from a community volunteer, **not** an application for the advertised Software Developer post, and no salary or fee is requested. The clinic's own Health Information System (HIS) staff and in-house Tech Team remain the owners and decision makers.
 
 ---
 
@@ -183,13 +183,28 @@ Priority: **P1** = needed to go live, **P2** = soon after, **P3** = later.
 
 ---
 
+## 6b. Volunteer engagement terms (to agree in writing before any work)
+
+A volunteer offer still needs clear terms so it helps the clinic and does not become a risk to it.
+
+- **Written agreement (MoU or volunteer agreement)** covering scope, duration, who the volunteer reports to, and that either side can end it with notice.
+- **Ownership**: the clinic owns the system, data and documentation. Code goes in a repository the clinic controls, with an open-source or clinic-owned licence.
+- **Confidentiality and data access**: sign a confidentiality agreement; use fake data during design; any access to real patient data only after the clinic's data-protection approval, with the least access needed, and on clinic-controlled devices or servers.
+- **Continuity**: a volunteer can leave. Write documentation as you go, train at least two clinic staff to maintain it, and avoid tools that only the volunteer can run.
+- **Low running cost**: prefer free or open-source tools. Do not commit the clinic to paid licences (for example Retool seats) unless the clinic agrees and can fund them after the pilot.
+- **No pressure to adopt**: the pilot is a trial; the clinic can stop or change direction at any point.
+- **Legal status of volunteering in Thailand**: check whether unpaid work for the clinic needs any permit or approval for the volunteer's nationality or visa, and whether remote volunteering from outside Thailand avoids this. **[to confirm with the clinic and an adviser; not legal advice]**
+- **Liability and clinical safety**: an EMR can affect patient care. Agree that the clinic's clinicians validate all forms, drug lists, alerts and calculations, and that paper fallback exists.
+
+---
+
 ## 7. Risks
 
 | Risk | Mitigation |
 |---|---|
 | Staff overload or low computer familiarity | Simple screens, short training, super-users, phased rollout |
 | Power/internet outages | Local server or offline mode, paper downtime forms |
-| Single-developer dependency | Documentation, code in the clinic's own repository, handover plan |
+| Single-volunteer dependency (volunteer may become unavailable) | Documentation, code in the clinic's own repository, two trained clinic staff, handover plan |
 | Retool cost and lock-in | Standard database and FHIR-aligned model; confirm licence cost early |
 | Funding shortfall | Phase delivery; prefer open-source components; low hosting cost |
 | Data breach affecting vulnerable patients | Role-based access, encryption, audit, PDPA process |
