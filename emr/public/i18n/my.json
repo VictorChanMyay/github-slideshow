@@ -233,5 +233,14 @@
 "adm.occupied": "အသုံးပြုထား",
 "blood.title": "သွေးနှင့် သွေးသွင်းခြင်း",
 "blood.group": "သွေးအုပ်စု",
-"proc.title": "ဆေးကုသမှုလုပ်ငန်းစဉ်များ"
+"proc.title": "ဆေးကုသမှုလုပ်ငန်းစဉ်များ",
+"nav.dashboard": "ဒက်ရှ်ဘုတ်",
+"nav.reports": "အစီရင်ခံစာများ",
+"dash.tile.visits_today": "ယနေ့ ဆေးခန်းလာသူ",
+"dash.tile.in_queue": "စောင့်ဆိုင်းနေသူ",
+"dash.tile.admitted_now": "ဆေးရုံတင်ထားသူ",
+"dash.tile.beds_free": "လွတ်နေသော ကုတင်",
+"rep.run": "အစီရင်ခံစာပြရန်",
+"rep.from": "မှ",
+"rep.to": "အထိ"
 }

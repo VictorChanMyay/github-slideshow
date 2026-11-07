@@ -1,6 +1,6 @@
 # Clinic EMR (volunteer prototype)
 
-A working, multi-user electronic medical record prototype for a community clinic. **Demo data only. Do not enter real patient information.** See `PLAN.md` for the full roadmap (10 milestones). Milestones **M1 (foundation)**, **M2 (outpatient core)** and **M3 (lab, prescribing, dispensing, stock)** **M4 (maternal and child health)** and **M5 (child health)** and **M6 (programmes)** and **M7 (referrals, summaries, appointments, follow-up)** and **M8 (inpatient, procedures, blood bank)** are done.
+A working, multi-user electronic medical record prototype for a community clinic. **Demo data only. Do not enter real patient information.** See `PLAN.md` for the full roadmap (10 milestones). Milestones **M1 (foundation)**, **M2 (outpatient core)** and **M3 (lab, prescribing, dispensing, stock)** **M4 (maternal and child health)** and **M5 (child health)** and **M6 (programmes)** and **M7 (referrals, summaries, appointments, follow-up)** and **M8 (inpatient, procedures, blood bank)** and **M9 (reporting)** are done.
 
 ## What works now (M1)
 - Sign-in with roles (doctor, nurse, midwife, pharmacist, lab, registration, HIS, program officer, admin); lockout after 5 failed attempts; forced password change for new users
@@ -121,3 +121,12 @@ Burmese text is a **draft by a non-native speaker and needs review**. Karen has 
 - The database is one SQLite file in `data/`. Uses Node's built-in SQLite, which Node still labels experimental; the code is isolated in `lib/db.js` so it can be swapped.
 - Clinical content (drug lists, codes, alerts) added in later milestones is draft and must be checked by the clinic's clinicians.
 - Not security-audited. Prototype only.
+
+## Added in M9 (reporting and dashboards)
+- **Dashboard:** role-limited tiles (visits today, queue, admitted, free beds, labs and prescriptions waiting, low stock, referrals with no reply, follow-ups, urgent antenatal alerts, unsigned visits) and three charts. HIV diagnoses never appear.
+- **Reports:** morbidity by age and sex, workload, maternal and family planning, child health, programmes, laboratory, pharmacy/stock/blood bank, inpatient, referrals, and data-quality checks. About 67 indicators, each with a written definition shown on screen and in exports.
+- **Donor templates (drafts):** monthly clinic activity and quarterly programme report, built from the same indicators. Replace with the donors' real templates once the clinic shares them.
+- **Export:** CSV (opens correctly in Excel, formulas neutralised) and real `.xlsx` workbooks. Only records officers, programme officers and admins can export; every view and export is logged (report name, period, format only).
+- **Privacy:** aggregate numbers only, no patient lists. For sensitive indicators (HIV, hepatitis B and syphilis tests, maternal and inpatient deaths) counts of 1 to 4 show as "<5" in exports and on screen for roles without HIV access; sensitive breakdowns are never produced.
+- Coverage rates use the clinic's registered patients as denominator, and say so.
+- **Needs clinical and donor review:** every indicator definition, the age groups, the morbidity code list, and the report layouts. Report titles and definitions are English only (donors read them in English).

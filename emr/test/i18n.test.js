@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const dir = path.join(__dirname, '..', 'public');
 const en = JSON.parse(fs.readFileSync(path.join(dir, 'i18n', 'en.json'), 'utf8'));
-const src = ['app.js', 'clinical.js', 'orders.js', 'mch.js', 'child.js', 'programs.js', 'continuity.js', 'inpatient.js'].map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
+const src = ['app.js', 'clinical.js', 'orders.js', 'mch.js', 'child.js', 'programs.js', 'continuity.js', 'inpatient.js', 'reports.js'].map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
 
 test('every literal t("key") used in the screens exists in English', () => {
   const keys = [...src.matchAll(/\bt\('([A-Za-z0-9_.]+)'\)/g)].map((m) => m[1]);
@@ -114,4 +114,14 @@ test('every inpatient, procedure and blood bank option, status and message from 
   for (const v of ['general', 'maternity', 'paediatric', 'isolation', 'other']) assert.ok(`ward.kind.${v}` in en, v); assert.ok('flag.title' in en);
   const seed = require('../lib/inpatient_seed'); for (const w of seed.WARDS) assert.ok(`ward.kind.${w[1]}` in en, w[1]); // every seeded ward kind has a label
   const sql = fs.readFileSync(path.join(__dirname, '..', 'lib', 'db.js'), 'utf8'); const kinds = /kind TEXT NOT NULL DEFAULT 'general' CHECK\(kind IN \(([^)]*)\)\)/.exec(sql); assert.ok(kinds); for (const k of kinds[1].replace(/'/g, '').split(',')) assert.ok(`ward.kind.${k.trim()}` in en, k);
+});
+
+test('every dashboard tile and report choice has text', () => {
+  const dash = fs.readFileSync(path.join(__dirname, '..', 'lib', 'dashboard.js'), 'utf8'); const tiles = [...dash.matchAll(/add\('([a-z_]+)'/g)].map((m) => m[1]); assert.ok(tiles.length >= 11);
+  for (const k of tiles) assert.ok(`dash.tile.${k}` in en, 'tile ' + k);
+  const db = require('../lib/db').open(':memory:'); const app = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.js'), 'utf8');
+  const links = new Set(); for (const role of ['doctor', 'nurse', 'his', 'program', 'admin', 'midwife']) for (const x of require('../lib/dashboard').dashboard(db, { id: 1, role }).tiles) links.add(x.link); assert.ok(links.size >= 8);
+  for (const l of links) assert.ok(new RegExp(`\\b${l}: \\[`).test(app), 'dashboard link to an unknown screen: ' + l); // every tile opens a screen that exists
+  for (const k of ['this_month', 'last_month', 'last_3_months', 'year_to_date']) assert.ok(`rep.preset.${k}` in en, k); for (const k of ['report', 'template']) assert.ok(`rep.kind.${k}` in en, k);
+  for (const k of ['visits_per_day', 'top_diagnoses', 'visits_per_month']) assert.ok(`dash.chart.${k}` in en, k); assert.ok('nav.dashboard' in en && 'nav.reports' in en);
 });

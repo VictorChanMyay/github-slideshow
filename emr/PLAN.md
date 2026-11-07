@@ -46,7 +46,7 @@ Doctor/medic, Nurse, Midwife, Pharmacist, Lab technician, Registration clerk, HI
 | M6 ✅ | Programs | TB, HIV (extra confidentiality), malaria, chronic disease follow-up with recall lists |
 | M7 ✅ | Referrals and continuity | Referral out/back, printable referral and discharge summaries, appointments and reminders |
 | M8 ✅ | Inpatient and procedures | Admissions, beds, ward notes, discharge, procedures log, blood bank inventory |
-| M9 | Reporting | Morbidity, MCH, immunization, stock, workload; donor report templates; CSV/Excel export; dashboards |
+| M9 ✅ | Reporting | Morbidity, MCH, immunization, stock, workload; donor report templates; CSV/Excel export; dashboards |
 | M10 | Hardening and handover | Backups and restore test, security review checklist, performance on low-spec PC, user guide, admin guide, training deck, source handover |
 
 Scope warning: "everything" is about 10 milestones. Plan to show M1–M3 to the clinic early and adjust the rest from their feedback instead of finishing all ten blind.
@@ -97,3 +97,11 @@ See `emr-prototype/DISCOVERY_QUESTIONS.md`. Answers on forms, drug list, lab lis
 - **Procedures:** consent is required (emergency exception with a written reason). Surgical procedures also need the three WHO safety checklist steps (sign in, time out, sign out) and a surgical role. Records are never edited: a wrong entry is voided with a reason.
 - **Blood bank:** a unit is "quarantine" until all five screening tests (HIV, hepatitis B, hepatitis C, syphilis, malaria) are negative; any positive discards it automatically. **Donor screening results are visible only to blood bank staff:** doctors and nurses see only "discarded after screening". Issuing needs the patient's recorded blood group and a compatible unit; with no known group, only an O-negative emergency issue with a written reason is possible. Red cells need the crossmatch confirmed. Expired units are never issued. A returned unit is discarded (cold chain unknown).
 - **Not in M8:** inpatient medicine charting (a medication administration record), fluid balance targets, nutrition orders, and donor notification and counselling. They need the clinic's own protocols.
+
+## M9 design decisions (reporting) - to confirm with the clinic
+- **Aggregate numbers only.** No report or export lists individual patients. Line lists stay on the follow-up and register screens, where access rules apply.
+- **Small-number protection:** in a small clinic a count of 1 to 4 can identify a person. For *sensitive* indicators (HIV, hepatitis B and syphilis tests, maternal and inpatient deaths) a count of 1 to 4 is shown as "<5" in every export and for roles without HIV access on screen. Sensitive breakdowns by age or sex are never produced, only totals.
+- **Who sees what:** doctors, midwives, records officers, programme officers and admins can read reports; only records officers, programme officers and admins can export. Everything viewed or downloaded is logged. The dashboard shows each role only the tiles it may see.
+- **Definitions travel with the numbers:** every indicator has a written definition shown on screen and in exports, so a donor reading the file can see exactly what was counted. The two donor templates (monthly activity, quarterly programme) are drafts built from the same indicators.
+- **Coverage is among registered patients, not the whole community.** Immunization coverage and similar rates use the clinic's own registered children as the denominator and say so.
+- Excel files are real .xlsx workbooks (one sheet per section); CSV opens correctly in Excel (UTF-8 with a byte-order mark) and cannot run formulas (cells starting with =, +, - or @ are neutralised).

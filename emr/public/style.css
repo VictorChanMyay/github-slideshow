@@ -58,3 +58,10 @@ dialog.wide{max-width:820px;max-height:92vh;overflow:auto}
 .bed.free{border-style:dashed}.bed.off{opacity:.55}.bed.full{border-color:#3b6a8a}.bed.critical{border-color:var(--bad)}
 .bed .who{font-weight:600;margin:2px 0}
 .wardnote{border-bottom:1px solid var(--line);padding:6px 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.card.warn{border-top-color:var(--gold)}.card.crit{border-top-color:var(--bad)}.card{cursor:pointer}
+.hbar{margin:6px 0}.hbar-label{font-size:13px}.hbar-track{display:flex;align-items:center;gap:8px}.hbar-fill{height:12px;background:#4cb86a;border-radius:6px;width:0;min-width:2px}.hbar-n{font-size:12px;color:var(--mute)}
+.btnlink{display:inline-block;padding:6px 12px;border-radius:8px;background:var(--accent);color:#06210f;text-decoration:none;font-weight:600}
+@media print{.cards,.card{display:none}}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin:12px 0}.cards .card{display:flex;flex-direction:column;gap:4px;padding:12px;margin:0}.cards .card b{font-size:28px;line-height:1}.cards .card span{font-size:13px;color:var(--mute)}

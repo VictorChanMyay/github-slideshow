@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "demo": "node server.js --demo",
-    "test": "node --test --no-warnings test/m1.test.js test/m2.test.js test/m3.test.js test/m4.test.js test/m5.test.js test/m6.test.js test/m7.test.js test/m8.test.js test/maternal.test.js test/inpatient_rules.test.js test/continuity_rules.test.js test/programs_rules.test.js test/growth.test.js test/immunization.test.js test/clinical.test.js test/i18n.test.js",
+    "test": "node --test --no-warnings test/m1.test.js test/m2.test.js test/m3.test.js test/m4.test.js test/m5.test.js test/m6.test.js test/m7.test.js test/m8.test.js test/m9.test.js test/maternal.test.js test/report_utils.test.js test/inpatient_rules.test.js test/continuity_rules.test.js test/programs_rules.test.js test/growth.test.js test/immunization.test.js test/clinical.test.js test/i18n.test.js",
     "i18n:report": "node tools/i18n-report.js"
   }
 }
