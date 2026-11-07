@@ -91,7 +91,7 @@ function changePasswordScreen() {
 }
 
 function shell(title, content) {
-  const nav = [['queue', 'nav.queue', state.user.perms.includes('queue.read')], ['patients', 'nav.patients', true], ['lab', 'nav.lab', ['lab.collect', 'lab.result', 'lab.read'].some((x) => state.user.perms.includes(x))], ['pharmacy', 'nav.pharmacy', ['rx.dispense', 'rx.read'].some((x) => state.user.perms.includes(x))], ['stock', 'nav.stock', state.user.perms.includes('stock.read')], ['audit', 'nav.audit', state.user.perms.includes('audit.read')], ['users', 'nav.users', state.user.perms.includes('user.admin')]]
+  const nav = [['queue', 'nav.queue', state.user.perms.includes('queue.read')], ['patients', 'nav.patients', true], ['mch', 'nav.mch', state.user.perms.includes('mch.read')], ['lab', 'nav.lab', ['lab.collect', 'lab.result', 'lab.read'].some((x) => state.user.perms.includes(x))], ['pharmacy', 'nav.pharmacy', ['rx.dispense', 'rx.read'].some((x) => state.user.perms.includes(x))], ['stock', 'nav.stock', state.user.perms.includes('stock.read')], ['audit', 'nav.audit', state.user.perms.includes('audit.read')], ['users', 'nav.users', state.user.perms.includes('user.admin')]]
     .filter((n) => n[2]).map((n) => h('a', { href: '#', class: state.view === n[0] ? 'on' : '', onclick: (e) => { e.preventDefault(); state.view = n[0]; render(); } }, t(n[1])));
   return h('div', { class: 'layout' },
     h('aside', {}, h('div', { class: 'logo' }, h('img', { src: 'assets/mtc-logo.png', alt: 'Mae Tao Clinic' })),
@@ -133,9 +133,11 @@ function detailView() {
     h('div', { class: 'panel' }, h('h3', {}, p.name_en, ' ', h('span', { class: 'tag' }, p.mrn), p.restricted ? h('span', { class: 'tag warn' }, ' ' + t('patient.restricted')) : null),
       h('div', { class: 'grid' }, field('patient.sex', sexLabel(p.sex)), field('patient.dob', p.dob), field('patient.age', ageText(p.dob) + (p.dob_estimated ? ' (' + t('age.estimated') + ')' : '')),
         field('patient.phone', p.phone), field('patient.village', p.village), field('patient.ethnicity', p.ethnicity), field('patient.language', p.language), field('patient.nationality', p.nationality)),
+      p.mother ? h('div', { class: 'row' }, h('span', { class: 'note' }, t('mch.mother') + ':'), h('button', { class: 'sm', onclick: () => openPatient(p.mother.id) }, p.mother.restricted ? p.mother.mrn : p.mother.name_en)) : null,
+      p.children && p.children.length ? h('div', { class: 'row' }, h('span', { class: 'note' }, t('mch.children') + ':'), p.children.map((c) => h('button', { class: 'sm', onclick: () => openPatient(c.id) }, `${c.name_en} (${c.dob})`))) : null,
       h('h4', {}, t('patient.names')), p.names.length ? p.names.map((n) => h('div', {}, `${t('script.' + n.script)}: ${n.name}`)) : h('div', { class: 'note' }, t('common.none')),
       h('h4', {}, t('patient.ids')), p.ids.length ? p.ids.map((n) => h('div', {}, `${t('idtype.' + n.id_type)}: ${n.number}`)) : h('div', { class: 'note' }, t('patient.no_id'))),
-    clinicalPanels(p));
+    clinicalPanels(p), mchPanels(p));
 }
 
 function registerView() {
@@ -196,7 +198,7 @@ async function render() {
   if (!state.user) { root.replaceChildren(loginScreen()); return; }
   if (state.user.must_change) { root.replaceChildren(changePasswordScreen()); return; }
   if (!state.meta) state.meta = (await api('GET', '/api/meta')).data;
-  const views = { patients: ['patients.title', patientsView], register: ['patients.register', async () => registerView()], detail: ['patients.title', async () => detailView()], audit: ['audit.title', auditView], queue: ['queue.title', queueView], encounter: ['visit.title', async () => { await loadLabTests(); return encounterView(); }], lab: ['lab.worklist', labView], pharmacy: ['rx.worklist', pharmacyView], stock: ['stock.title', stockView], summary: ['summary.title', summaryView], users: ['users.title', usersView] };
+  const views = { patients: ['patients.title', patientsView], register: ['patients.register', async () => registerView()], detail: ['patients.title', async () => detailView()], audit: ['audit.title', auditView], queue: ['queue.title', queueView], encounter: ['visit.title', async () => { await loadLabTests(); return encounterView(); }], lab: ['lab.worklist', labView], pharmacy: ['rx.worklist', pharmacyView], stock: ['stock.title', stockView], mch: ['nav.mch', mchView], episode: ['mch.title', async () => { await loadMchMeta(); return episodeView(); }], summary: ['summary.title', summaryView], users: ['users.title', usersView] };
   const [title, fn] = views[state.view] || views.patients;
   root.replaceChildren(shell(t(title), await fn()));
 }

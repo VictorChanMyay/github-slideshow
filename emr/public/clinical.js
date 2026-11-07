@@ -38,6 +38,9 @@ async function openPatient(pid) {
   if (r.status === 403) { alert(t('restricted.denied')); return; }
   if (!r.ok) { if (r.status !== 428) oops(r); return; }
   state.patient = r.data.patient; state.clinical = r.data.allergies ? { allergies: r.data.allergies, problems: r.data.problems, encounters: r.data.encounters } : null; // clerks get no clinical data
+  state.mch = null;
+  if (can('mch.read')) await loadMchMeta();
+  if (can('mch.read') && r.data.patient.sex !== 'M') { const m = await withAccess(pid, () => api('GET', `/api/patients/${pid}/mch`)); if (m.ok) state.mch = m.data; }
   state.view = 'detail'; render();
 }
 async function openEncounter(id, pid) {

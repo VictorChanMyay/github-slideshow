@@ -88,7 +88,20 @@ function getFull(db, id) {
   if (!p) return null;
   return { ...p, dob_estimated: !!p.dob_estimated, restricted: !!p.restricted,
     names: db.prepare('SELECT script,name FROM patient_names WHERE patient_id=?').all(id),
-    ids: db.prepare('SELECT id_type,number FROM patient_ids WHERE patient_id=?').all(id) };
+    ids: db.prepare('SELECT id_type,number FROM patient_ids WHERE patient_id=?').all(id),
+    mother: p.mother_id ? db.prepare('SELECT id,mrn,name_en,restricted FROM patients WHERE id=?').get(p.mother_id) : null,
+    children: db.prepare('SELECT id,mrn,name_en,sex,dob FROM patients WHERE mother_id=? AND voided=0 ORDER BY dob,id').all(id) };
 }
 
-module.exports = { create, search, getFull, summary, ValidationError, SCRIPTS, ID_TYPES };
+// Newborn's own patient record, linked to the mother. No transaction here: the caller wraps it.
+// A baby of a restricted mother is restricted too, and is named by the mother's MRN so the link is not revealed.
+function createBaby(db, mother, input, user) {
+  const mrn = nextMrn(db);
+  const label = input.label ? `Baby ${input.label} of ` : 'Baby of ';
+  const name = label + (mother.restricted ? mother.mrn : mother.name_en);
+  const r = db.prepare(`INSERT INTO patients(mrn,name_en,sex,dob,dob_estimated,village,ethnicity,language,nationality,restricted,mother_id,created_by)
+    VALUES(?,?,?,?,0,?,?,?,?,?,?,?)`).run(mrn, name, input.sex, input.dob, mother.village || '', mother.ethnicity || '', mother.language || '', mother.nationality || '', mother.restricted ? 1 : 0, mother.id, user.id);
+  return { id: Number(r.lastInsertRowid), mrn };
+}
+
+module.exports = { createBaby, create, search, getFull, summary, ValidationError, SCRIPTS, ID_TYPES };

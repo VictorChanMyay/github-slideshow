@@ -157,5 +157,22 @@
 "stock.drug": "ဆေးဝါး",
 "stock.batch": "အသုတ်နံပါတ်",
 "stock.expiry": "သက်တမ်းကုန်ဆုံးရက်",
-"stock.low": "လက်ကျန်နည်း"
+"stock.low": "လက်ကျန်နည်း",
+"nav.mch": "မိခင်နှင့် ကလေး ကျန်းမာရေး",
+"mch.title": "မိခင်ကျန်းမာရေး",
+"mch.tab.antenatal": "ကိုယ်ဝန်ဆောင်စောင့်ရှောက်မှု",
+"mch.tab.postnatal": "မီးဖွားပြီးစောင့်ရှောက်မှု",
+"mch.tab.fp": "မိသားစုစီမံကိန်း",
+"mch.edd": "မီးဖွားမည့်ရက် (EDD)",
+"mch.ga": "ကိုယ်ဝန်အရွယ်",
+"mch.lmp": "နောက်ဆုံး ဓမ္မတာလာသည့်ရက်",
+"mch.delivery": "မီးဖွားခြင်း",
+"mch.babies": "ကလေးများ",
+"mch.danger": "အန္တရာယ်လက္ခဏာများ",
+"mch.mother": "မိခင်",
+"mch.baby": "ကလေး",
+"mch.status.active": "ကိုယ်ဝန်ရှိနေဆဲ",
+"mch.status.delivered": "မီးဖွားပြီး",
+"mch.fpm.condom": "ကွန်ဒုံး",
+"mch.fpm.injectable": "ဆေးထိုး"
 }

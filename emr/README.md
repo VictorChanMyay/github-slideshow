@@ -1,6 +1,6 @@
 # Clinic EMR (volunteer prototype)
 
-A working, multi-user electronic medical record prototype for a community clinic. **Demo data only. Do not enter real patient information.** See `PLAN.md` for the full roadmap (10 milestones). Milestones **M1 (foundation)**, **M2 (outpatient core)** and **M3 (lab, prescribing, dispensing, stock)** are done.
+A working, multi-user electronic medical record prototype for a community clinic. **Demo data only. Do not enter real patient information.** See `PLAN.md` for the full roadmap (10 milestones). Milestones **M1 (foundation)**, **M2 (outpatient core)** and **M3 (lab, prescribing, dispensing, stock)** and **M4 (maternal and child health)** are done.
 
 ## What works now (M1)
 - Sign-in with roles (doctor, nurse, midwife, pharmacist, lab, registration, HIS, program officer, admin); lockout after 5 failed attempts; forced password change for new users
@@ -26,6 +26,17 @@ A working, multi-user electronic medical record prototype for a community clinic
 - **Dispensing:** first-expiry-first-out across batches, **expired stock is never dispensed**, partial dispensing is supported, and a failed dispense changes nothing (it runs as one transaction). Cancelling is only possible before dispensing.
 - **Stock:** batches with expiry, receive (expired batches refused), adjust and write-off (reason required, never below zero), low-stock and expiry alerts, and a movement log. Admins can add medicines to the list.
 - **Restricted patients:** lab and pharmacy staff can process the *task* (by MRN, name hidden) without opening the patient's record. This is a design decision the clinic should confirm.
+
+## Added in M4 (maternal and child health)
+- **Pregnancy record (booking):** LMP, gravida and para, risk factors (age under 18, 35 or over, and 5 or more births are added automatically). The due date is LMP + 280 days; an ultrasound scan can replace it when the LMP is doubtful or the scan differs by more than 7 days before 22 weeks. Only one active record per patient.
+- **Antenatal visits:** recorded as part of a clinic visit. Alerts for danger signs, high blood pressure, pre-eclampsia (raised BP with protein after 20 weeks), anaemia, reduced or absent fetal movement, abnormal fetal heart rate, fundal height mismatch and breech near term. The next contact is suggested from the WHO 8-contact schedule, and overdue contacts are flagged in the register.
+- **Labour observations:** each observation is flagged on its own (fetal heart rate, liquor, blood pressure, fever, contractions). The system does **not** judge progress of labour (no alert or action lines): the clinic must say which protocol it follows.
+- **Delivery and newborns:** mode, place, blood loss (500 ml or more is recorded as postpartum haemorrhage automatically), complications, mother's outcome, and up to 4 babies. Every live baby gets **its own patient record linked to the mother**; stillbirths are recorded without a patient record. A baby of a restricted mother is restricted too and named by the mother's MRN. The whole delivery is saved in one step: if anything fails, nothing is saved.
+- **Postnatal care:** mother and baby danger signs and alerts, and the four contact windows (day 0-1, day 3, day 7-14, week 6) with missed or due contacts in the register.
+- **Family planning:** methods and visits, a pregnancy check before starting most methods, a block for active pregnancy, safety warnings for the combined pill (raised blood pressure or hypertension, first 6 weeks after delivery), and an automatic reminder date for injectables (84 days, editable). The register lists overdue clients first.
+- **Registers (Maternal & child):** antenatal (alerts first), postnatal (missed or due contacts first) and family planning (overdue first). Restricted patients appear by MRN only.
+
+**Needs clinical review before real use (M4):** every threshold and schedule in `lib/maternal.js` (blood pressure, haemoglobin, fundal height, fetal heart rate, contact weeks, postnatal windows, injectable interval), which risk factors and complications to list, the rule that deliveries before 20 weeks are recorded as miscarriages, and which roles may record deliveries. The newborn's birth vaccines are only noted as given; Milestone 5 will turn them into immunization records.
 
 **Needs clinical review before real use (M3):** the starter medicine list and allergy words (`lib/formulary_seed.js`), lab menu and reference ranges, which tests count as sensitive, and the rule that numeric tests are not interpreted for children under 12 until the clinic adds child ranges.
 

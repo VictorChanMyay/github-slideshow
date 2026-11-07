@@ -149,6 +149,56 @@ const MIGRATIONS = [
     qty INTEGER NOT NULL CHECK(qty > 0), by_user INTEGER REFERENCES users(id), at TEXT NOT NULL DEFAULT (datetime('now'))
   );
   `,
+  // 4: maternal and child health
+  `
+  ALTER TABLE patients ADD COLUMN mother_id INTEGER REFERENCES patients(id);
+  CREATE INDEX patients_mother ON patients(mother_id);
+  CREATE TABLE anc_episodes(
+    id INTEGER PRIMARY KEY, patient_id INTEGER NOT NULL REFERENCES patients(id), lmp TEXT NOT NULL, lmp_certain INTEGER NOT NULL DEFAULT 1,
+    edd TEXT NOT NULL, edd_source TEXT NOT NULL CHECK(edd_source IN ('lmp','ultrasound')), gravida INTEGER NOT NULL, para INTEGER NOT NULL, living_children INTEGER NOT NULL DEFAULT 0,
+    risk_factors TEXT NOT NULL DEFAULT '[]', notes TEXT,
+    status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','delivered','miscarriage','transferred','closed')), closed_reason TEXT, closed_at TEXT,
+    booked_by INTEGER REFERENCES users(id), booked_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE UNIQUE INDEX one_active_episode ON anc_episodes(patient_id) WHERE status='active';
+  CREATE INDEX episodes_patient ON anc_episodes(patient_id);
+  CREATE TABLE anc_visits(
+    id INTEGER PRIMARY KEY, episode_id INTEGER NOT NULL REFERENCES anc_episodes(id), encounter_id INTEGER NOT NULL REFERENCES encounters(id),
+    visit_date TEXT NOT NULL, ga_days INTEGER NOT NULL, weight REAL, sys REAL, dia REAL, temp REAL, fundal_height REAL, fhr INTEGER,
+    presentation TEXT, fetal_movement TEXT, urine_protein TEXT, hb REAL, danger_signs TEXT NOT NULL DEFAULT '[]',
+    iron_folate INTEGER NOT NULL DEFAULT 0, td_vaccine INTEGER NOT NULL DEFAULT 0, counselling TEXT, next_visit_date TEXT, notes TEXT,
+    recorded_by INTEGER REFERENCES users(id), recorded_at TEXT NOT NULL DEFAULT (datetime('now')), UNIQUE(episode_id, encounter_id)
+  );
+  CREATE TABLE deliveries(
+    id INTEGER PRIMARY KEY, episode_id INTEGER NOT NULL UNIQUE REFERENCES anc_episodes(id), patient_id INTEGER NOT NULL REFERENCES patients(id),
+    delivered_on TEXT NOT NULL, delivered_time TEXT, ga_days INTEGER NOT NULL, mode TEXT NOT NULL, place TEXT NOT NULL, labour_hours REAL, blood_loss_ml INTEGER,
+    third_stage TEXT, oxytocin INTEGER NOT NULL DEFAULT 0, perineal_tear TEXT, complications TEXT NOT NULL DEFAULT '[]',
+    maternal_outcome TEXT NOT NULL, referred_to TEXT, notes TEXT, recorded_by INTEGER REFERENCES users(id), recorded_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE newborns(
+    id INTEGER PRIMARY KEY, delivery_id INTEGER NOT NULL REFERENCES deliveries(id), birth_order INTEGER NOT NULL, outcome TEXT NOT NULL,
+    patient_id INTEGER REFERENCES patients(id), sex TEXT, birth_weight_g INTEGER, apgar1 INTEGER, apgar5 INTEGER, resuscitation INTEGER NOT NULL DEFAULT 0,
+    breastfed_within_hour INTEGER NOT NULL DEFAULT 0, skin_to_skin INTEGER NOT NULL DEFAULT 0, vitamin_k INTEGER NOT NULL DEFAULT 0,
+    bcg_given INTEGER NOT NULL DEFAULT 0, opv0_given INTEGER NOT NULL DEFAULT 0, hepb0_given INTEGER NOT NULL DEFAULT 0, referred INTEGER NOT NULL DEFAULT 0, notes TEXT
+  );
+  CREATE TABLE partograph_entries(
+    id INTEGER PRIMARY KEY, episode_id INTEGER NOT NULL REFERENCES anc_episodes(id), recorded_at TEXT NOT NULL, cervix_cm INTEGER, descent INTEGER, contractions INTEGER,
+    fhr INTEGER, pulse INTEGER, sys REAL, dia REAL, temp REAL, liquor TEXT, moulding INTEGER, notes TEXT, by_user INTEGER REFERENCES users(id)
+  );
+  CREATE INDEX partograph_ep ON partograph_entries(episode_id);
+  CREATE TABLE postnatal_visits(
+    id INTEGER PRIMARY KEY, episode_id INTEGER NOT NULL REFERENCES anc_episodes(id), encounter_id INTEGER REFERENCES encounters(id), visit_date TEXT NOT NULL, days_postpartum INTEGER NOT NULL,
+    newborn_id INTEGER REFERENCES newborns(id), sys REAL, dia REAL, temp REAL, pulse INTEGER, bleeding TEXT, uterus TEXT, perineum TEXT, mood TEXT, mother_danger TEXT NOT NULL DEFAULT '[]',
+    baby_weight_g INTEGER, baby_temp REAL, baby_rr INTEGER, feeding TEXT, cord TEXT, jaundice INTEGER NOT NULL DEFAULT 0, baby_danger TEXT NOT NULL DEFAULT '[]',
+    counselled_fp INTEGER NOT NULL DEFAULT 0, notes TEXT, recorded_by INTEGER REFERENCES users(id), recorded_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE family_planning(
+    id INTEGER PRIMARY KEY, patient_id INTEGER NOT NULL REFERENCES patients(id), encounter_id INTEGER REFERENCES encounters(id), visit_date TEXT NOT NULL,
+    method TEXT NOT NULL, action TEXT NOT NULL, pregnancy_excluded INTEGER NOT NULL DEFAULT 0, sys REAL, dia REAL, side_effects TEXT, next_due TEXT,
+    warnings_acked TEXT NOT NULL DEFAULT '[]', notes TEXT, recorded_by INTEGER REFERENCES users(id), recorded_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX fp_patient ON family_planning(patient_id);
+  `,
 ];
 
 function open(file) {

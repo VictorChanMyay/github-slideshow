@@ -41,7 +41,7 @@ Doctor/medic, Nurse, Midwife, Pharmacist, Lab technician, Registration clerk, HI
 | M1 ✅ | Foundation | Server, DB + migrations, login/roles, audit log, i18n (3 languages), patient registry (ID types, alternate-script names, duplicate check, estimated age, restricted records with break-glass), seed demo data |
 | M2 ✅ | Outpatient core | Queue, triage vitals (with abnormal flags), encounter SOAP, ICD-10 diagnoses, problems, allergies, patient summary print |
 | M3 ✅ | Orders: lab and pharmacy | Lab orders/results with reference ranges, drug formulary, prescribing with allergy and duplicate checks, dispensing that decreases stock, stock batches/expiry alerts |
-| M4 | Reproductive, maternal and child health | Antenatal episodes/visits, risk and danger-sign alerts, EDD, delivery/partograph summary, newborn, postnatal, family planning, mother-baby link |
+| M4 ✅ | Reproductive, maternal and child health | Antenatal episodes/visits, risk and danger-sign alerts, EDD, delivery/partograph summary, newborn, postnatal, family planning, mother-baby link |
 | M5 | Child health | Immunization schedule with due/overdue, growth charts (WHO z-scores), nutrition screening |
 | M6 | Programs | TB, HIV (extra confidentiality), malaria, chronic disease follow-up with recall lists |
 | M7 | Referrals and continuity | Referral out/back, printable referral and discharge summaries, appointments and reminders |
