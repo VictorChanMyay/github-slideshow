@@ -68,7 +68,7 @@ function loginScreen() {
     e.preventDefault(); err.textContent = '';
     const r = await api('POST', '/api/login', { username: u.value, password: p.value });
     if (!r.ok) { err.textContent = r.status === 429 ? t('login.locked') : t('login.failed'); return; }
-    state.user = r.data.user; await loadLang(state.user.lang || state.lang); render();
+    state.user = r.data.user; state.view = state.user.perms.includes('queue.read') ? 'queue' : 'patients'; await loadLang(state.user.lang || state.lang); render();
   } },
   h('label', { for: 'u' }, t('login.username')), u, h('label', { for: 'p' }, t('login.password')), p, err,
   h('div', { class: 'row' }, h('button', { class: 'pri', type: 'submit' }, t('login.submit')), langSelect()));
@@ -91,7 +91,7 @@ function changePasswordScreen() {
 }
 
 function shell(title, content) {
-  const nav = [['patients', 'nav.patients', true], ['audit', 'nav.audit', state.user.perms.includes('audit.read')], ['users', 'nav.users', state.user.perms.includes('user.admin')]]
+  const nav = [['queue', 'nav.queue', state.user.perms.includes('queue.read')], ['patients', 'nav.patients', true], ['audit', 'nav.audit', state.user.perms.includes('audit.read')], ['users', 'nav.users', state.user.perms.includes('user.admin')]]
     .filter((n) => n[2]).map((n) => h('a', { href: '#', class: state.view === n[0] ? 'on' : '', onclick: (e) => { e.preventDefault(); state.view = n[0]; render(); } }, t(n[1])));
   return h('div', { class: 'layout' },
     h('aside', {}, h('div', { class: 'logo' }, h('img', { src: 'assets/mtc-logo.png', alt: 'Mae Tao Clinic' })),
@@ -112,7 +112,7 @@ async function patientsView() {
     const rows = (r.data.patients || []);
     if (!rows.length) { listBox.append(h('p', { class: 'note' }, t('patients.empty'))); return; }
     listBox.append(h('table', {}, h('tr', {}, ['patient.mrn', 'patient.name_en', 'patient.sex', 'patient.age', 'patient.village'].map((k) => h('th', {}, t(k)))),
-      rows.map((p) => h('tr', { class: 'click', onclick: () => openPatient(p) },
+      rows.map((p) => h('tr', { class: 'click', onclick: () => openPatient(p.id) },
         h('td', {}, p.mrn),
         h('td', {}, p.name_en, ...p.names.map((n) => h('span', { class: 'note' }, ' ' + n.name)), p.restricted ? h('span', { class: 'tag warn' }, ' ' + t('patient.restricted')) : null),
         h('td', {}, sexLabel(p.sex)), h('td', {}, ageText(p.dob) + (p.dob_estimated ? ' (' + t('age.estimated') + ')' : '')), h('td', {}, p.village || '')))));
@@ -124,30 +124,18 @@ async function patientsView() {
   return wrap;
 }
 
-async function openPatient(p, reason) {
-  let url = '/api/patients/' + p.id + (reason ? '?reason=' + encodeURIComponent(reason) : '');
-  const r = await api('GET', url);
-  if (r.status === 428) return askReason(p);
-  if (r.status === 403) { alert(t('restricted.denied')); return; }
-  if (!r.ok) { alert(t('common.error')); return; }
-  state.view = 'detail'; state.patient = r.data.patient; render();
-}
-function askReason(p) {
-  const err = h('div', { class: 'err' }); const ta = h('textarea', { rows: 3, 'aria-label': t('restricted.reason') });
-  const d = modal([h('h3', {}, t('restricted.title')), h('p', {}, t('restricted.text')), h('label', {}, t('restricted.reason')), ta, err,
-    h('div', { class: 'row' }, h('button', { class: 'pri', onclick: () => { if (ta.value.trim().length < 5) { err.textContent = t('restricted.short'); return; } d.close(); openPatient(p, ta.value.trim()); } }, t('restricted.open')),
-      h('button', { onclick: () => d.close() }, t('common.cancel')))]);
-}
-
 function detailView() {
   const p = state.patient;
   const field = (k, v) => h('div', {}, h('div', { class: 'note' }, t(k)), h('div', {}, v || '—'));
-  return h('div', {}, h('div', { class: 'row' }, h('button', { onclick: () => { state.view = 'patients'; render(); } }, '← ' + t('common.back'))),
+  return h('div', {}, h('div', { class: 'row' }, h('button', { onclick: () => { state.view = 'patients'; render(); } }, '← ' + t('common.back')),
+      can('encounter.checkin') ? h('button', { class: 'pri', onclick: () => doCheckin(p.id) }, t('queue.checkin')) : null,
+      can('encounter.read') ? h('button', { onclick: () => { state.view = 'summary'; render(); } }, t('summary.print')) : null),
     h('div', { class: 'panel' }, h('h3', {}, p.name_en, ' ', h('span', { class: 'tag' }, p.mrn), p.restricted ? h('span', { class: 'tag warn' }, ' ' + t('patient.restricted')) : null),
       h('div', { class: 'grid' }, field('patient.sex', sexLabel(p.sex)), field('patient.dob', p.dob), field('patient.age', ageText(p.dob) + (p.dob_estimated ? ' (' + t('age.estimated') + ')' : '')),
         field('patient.phone', p.phone), field('patient.village', p.village), field('patient.ethnicity', p.ethnicity), field('patient.language', p.language), field('patient.nationality', p.nationality)),
       h('h4', {}, t('patient.names')), p.names.length ? p.names.map((n) => h('div', {}, `${t('script.' + n.script)}: ${n.name}`)) : h('div', { class: 'note' }, t('common.none')),
-      h('h4', {}, t('patient.ids')), p.ids.length ? p.ids.map((n) => h('div', {}, `${t('idtype.' + n.id_type)}: ${n.number}`)) : h('div', { class: 'note' }, t('patient.no_id'))));
+      h('h4', {}, t('patient.ids')), p.ids.length ? p.ids.map((n) => h('div', {}, `${t('idtype.' + n.id_type)}: ${n.number}`)) : h('div', { class: 'note' }, t('patient.no_id'))),
+    clinicalPanels(p));
 }
 
 function registerView() {
@@ -204,10 +192,11 @@ async function usersView() {
 
 /* ---------- router ---------- */
 async function render() {
+  if (state.view !== 'queue') clearInterval(queueTimer);
   if (!state.user) { root.replaceChildren(loginScreen()); return; }
   if (state.user.must_change) { root.replaceChildren(changePasswordScreen()); return; }
   if (!state.meta) state.meta = (await api('GET', '/api/meta')).data;
-  const views = { patients: ['patients.title', patientsView], register: ['patients.register', async () => registerView()], detail: ['patients.title', async () => detailView()], audit: ['audit.title', auditView], users: ['users.title', usersView] };
+  const views = { patients: ['patients.title', patientsView], register: ['patients.register', async () => registerView()], detail: ['patients.title', async () => detailView()], audit: ['audit.title', auditView], queue: ['queue.title', queueView], encounter: ['visit.title', async () => encounterView()], summary: ['summary.title', summaryView], users: ['users.title', usersView] };
   const [title, fn] = views[state.view] || views.patients;
   root.replaceChildren(shell(t(title), await fn()));
 }
@@ -216,6 +205,6 @@ async function render() {
   let lang = 'en'; try { lang = localStorage.getItem('emr-lang') || 'en'; } catch { /* ignore */ }
   await loadLang(['en', 'my', 'kar'].includes(lang) ? lang : 'en');
   const me = await api('GET', '/api/me');
-  if (me.ok) { state.user = me.data.user; await loadLang(state.user.lang || lang); }
+  if (me.ok) { state.user = me.data.user; state.view = state.user.perms.includes('queue.read') ? 'queue' : 'patients'; await loadLang(state.user.lang || lang); }
   render();
 })();

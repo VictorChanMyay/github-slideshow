@@ -8,6 +8,8 @@ const audit = require('./lib/audit');
 const patients = require('./lib/patients');
 const { seed } = require('./lib/seed');
 const { can, ROLES } = require('./lib/permissions');
+const enc = require('./lib/encounters');
+const clinicalRoutes = require('./lib/clinical_routes');
 
 const PUBLIC = path.join(__dirname, 'public');
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -122,23 +124,31 @@ function createServer(db, opts = {}) {
           throw e;
         }
       }
+      if (clinicalRoutes.handle({ db, user, req, res, url, body, ip, send, fail })) return;
       let m;
       if ((m = url.pathname.match(/^\/api\/patients\/(\d+)$/)) && req.method === 'GET') {
         if (!can(user.role, 'patient.read')) return fail(res, 403, 'Not allowed');
         const p = patients.getFull(db, Number(m[1]));
         if (!p) return fail(res, 404, 'Patient not found');
         if (p.restricted) {
-          const reason = String(url.searchParams.get('reason') || '').trim();
           if (!can(user.role, 'patient.restricted')) {
             audit.log(db, user, 'restricted_denied', { patientId: p.id, ip });
             return fail(res, 403, 'Restricted record');
           }
-          if (reason.length < 5) return fail(res, 428, 'Reason required for restricted record', { restricted: true });
-          audit.log(db, user, 'restricted_access', { patientId: p.id, detail: reason.slice(0, 300), ip });
+          const reason = String(url.searchParams.get('reason') || '').trim();
+          if (reason.length >= 5) {
+            enc.createGrant(db, user, p.id, reason.slice(0, 300));
+            audit.log(db, user, 'restricted_access', { patientId: p.id, detail: reason.slice(0, 300), ip });
+          } else if (!enc.hasGrant(db, user, p.id)) {
+            return fail(res, 428, 'Reason required for restricted record', { restricted: true });
+          } else {
+            audit.log(db, user, 'patient_viewed', { patientId: p.id, detail: 'restricted, active grant', ip });
+          }
         } else {
           audit.log(db, user, 'patient_viewed', { patientId: p.id, ip });
         }
-        return send(res, 200, { patient: p });
+        const extra = can(user.role, 'encounter.read') ? enc.patientClinical(db, p.id) : {};
+        return send(res, 200, { patient: p, ...extra });
       }
       if (route === 'GET /api/audit') {
         if (!can(user.role, 'audit.read')) return fail(res, 403, 'Not allowed');

@@ -23,7 +23,8 @@ tr.click{cursor:pointer}tr.click:hover{background:#16262e}
 .tablewrap{overflow-x:auto}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
 label{display:block;font-size:12px;color:var(--mute);margin-bottom:3px}
-label input,label select{width:100%}
+label input,label select,label textarea{width:100%}
+label textarea{display:block;resize:vertical}
 .check{display:flex;gap:8px;align-items:center;color:var(--text);font-size:14px}.check input{width:auto}
 .tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;background:#1b3039}
 .tag.warn{color:var(--bad)}.tag.ok{color:var(--ok)}
@@ -39,3 +40,10 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
 dialog::backdrop{background:#000a}
 .sidefoot{margin-top:16px;padding-top:10px;border-top:1px solid var(--line)}
 @media(max-width:800px){aside{position:static;width:100%;border-right:0;border-bottom:1px solid var(--line)}.layout{display:block}main{margin-left:0}}
+.tag.crit{color:#fff;background:#a32d2d}
+.banner.info{background:#1c2a33;border-color:#3b6a8a;color:#bfe0f5}
+.pick{padding:8px 10px;border:1px solid var(--line);border-radius:8px;margin-top:4px;cursor:pointer;background:#0c161b}
+.pick:hover,.pick:focus{border-color:var(--accent);outline:none}
+.vit{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.printhead{display:flex;gap:14px;align-items:center}.printlogo{height:56px;background:#fff;border-radius:8px;padding:4px}
+@media print{aside,.noprint,.topbar{display:none!important}main{margin:0;padding:0}body{background:#fff;color:#000}.panel,.summary{background:#fff;color:#000;border:0}.note{color:#444}table,th,td{color:#000;border-color:#999}}
