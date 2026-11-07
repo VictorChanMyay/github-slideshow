@@ -1,7 +1,8 @@
 'use strict';
 const crypto = require('node:crypto');
 
-const SESSION_HOURS = 10;
+const SESSION_HOURS = 10;       // absolute limit
+const IDLE_MINUTES = 60;        // signed out after this long without activity
 const MAX_FAILS = 5;
 const LOCK_MINUTES = 15;
 
@@ -38,8 +39,8 @@ function login(db, username, password) {
   }
   db.prepare('UPDATE users SET failed_count=0, locked_until=0 WHERE id=?').run(u.id);
   const token = crypto.randomBytes(32).toString('hex');
-  db.prepare('INSERT INTO sessions(token_hash,user_id,expires_at) VALUES(?,?,?)')
-    .run(sha(token), u.id, now + SESSION_HOURS * 3600000);
+  db.prepare('INSERT INTO sessions(token_hash,user_id,expires_at,last_seen) VALUES(?,?,?,?)')
+    .run(sha(token), u.id, now + SESSION_HOURS * 3600000, now);
   return { token, user: u };
 }
 
@@ -48,9 +49,25 @@ function userFromToken(db, token) {
   const s = db.prepare('SELECT * FROM sessions WHERE token_hash=?').get(sha(token));
   if (!s) return null;
   if (s.expires_at < Date.now()) { db.prepare('DELETE FROM sessions WHERE token_hash=?').run(s.token_hash); return null; }
+  const now = Date.now();
+  if (now - s.last_seen > IDLE_MINUTES * 60000) { db.prepare('DELETE FROM sessions WHERE token_hash=?').run(s.token_hash); return null; }
   const u = db.prepare('SELECT * FROM users WHERE id=? AND active=1').get(s.user_id);
+  if (u && now - s.last_seen > 60000) db.prepare('UPDATE sessions SET last_seen=? WHERE token_hash=?').run(now, s.token_hash);
   return u || null;
 }
 function logout(db, token) { if (token) db.prepare('DELETE FROM sessions WHERE token_hash=?').run(sha(token)); }
 
-module.exports = { hashPassword, verifyPassword, checkPasswordStrength, login, userFromToken, logout, SESSION_HOURS };
+// End a user's sessions (all of them, or all except the one in use).
+function endSessions(db, userId, keepToken) {
+  if (keepToken) db.prepare('DELETE FROM sessions WHERE user_id=? AND token_hash<>?').run(userId, sha(keepToken));
+  else db.prepare('DELETE FROM sessions WHERE user_id=?').run(userId);
+}
+
+// Per-address throttle for failed sign-ins (in memory; complements the per-account lock).
+function makeThrottle(max = 20, windowMs = 15 * 60000) {
+  const hits = new Map();
+  const recent = (ip) => { const now = Date.now(); const a = (hits.get(ip) || []).filter((t) => now - t < windowMs); hits.set(ip, a); return a; };
+  return { blocked: (ip) => recent(ip).length >= max, fail: (ip) => { recent(ip).push(Date.now()); }, clear: (ip) => hits.delete(ip) };
+}
+
+module.exports = { endSessions, makeThrottle, IDLE_MINUTES, hashPassword, verifyPassword, checkPasswordStrength, login, userFromToken, logout, SESSION_HOURS };

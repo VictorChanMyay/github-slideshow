@@ -188,8 +188,19 @@ async function usersView() {
     ok.textContent = t('users.created'); render();
   } }, h('div', { class: 'grid' }, h('label', {}, t('users.username'), u), h('label', {}, t('users.name'), n), h('label', {}, t('users.role'), role), h('label', {}, t('users.password'), pw)),
   err, ok, h('div', { class: 'row' }, h('button', { class: 'pri', type: 'submit' }, t('users.create'))));
-  return h('div', {}, form, h('div', { class: 'panel tablewrap' }, h('table', {}, h('tr', {}, ['users.username', 'users.name', 'users.role'].map((k) => h('th', {}, t(k)))),
-    (r.data.users || []).map((x) => h('tr', {}, h('td', {}, x.username), h('td', {}, x.full_name), h('td', {}, t('role.' + x.role)))))));
+  const act = async (x, body, msg) => {
+    err.textContent = ''; ok.textContent = '';
+    const res = await api('PUT', '/api/users/' + x.id, body);
+    if (!res.ok) { err.textContent = res.data.error || t('common.error'); return; }
+    await render(); const o = document.querySelector('.tag.ok'); if (o && msg) o.textContent = msg;
+  };
+  const rows = (r.data.users || []).map((x) => h('tr', {}, h('td', {}, x.username), h('td', {}, x.full_name), h('td', {}, t('role.' + x.role)),
+    h('td', {}, x.active ? t('users.active') : t('users.inactive'), x.locked_until > Date.now() ? ' · ' + t('users.locked') : ''),
+    h('td', {}, h('div', { class: 'row' },
+      x.id === state.user.id ? null : h('button', { type: 'button', onclick: () => act(x, { active: !x.active }, t(x.active ? 'users.deactivated' : 'users.reactivated')) }, t(x.active ? 'users.deactivate' : 'users.reactivate')),
+      h('button', { type: 'button', onclick: () => { const pw2 = window.prompt(t('users.reset_prompt')); if (pw2) act(x, { password: pw2 }, t('users.reset_done')); } }, t('users.reset')),
+      x.locked_until > Date.now() ? h('button', { type: 'button', onclick: () => act(x, { unlock: true }, t('users.unlocked')) }, t('users.unlock')) : null))));
+  return h('div', {}, form, h('div', { class: 'panel tablewrap' }, h('table', {}, h('tr', {}, ['users.username', 'users.name', 'users.role', 'users.status', 'users.actions'].map((k) => h('th', {}, t(k)))), rows)));
 }
 
 /* ---------- router ---------- */

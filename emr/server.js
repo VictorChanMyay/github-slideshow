@@ -69,10 +69,13 @@ function serveStatic(req, res) {
 
 function createServer(db, opts = {}) {
   const secure = !!opts.secureCookies;
+  const throttle = auth.makeThrottle(opts.loginMax || 20);
   return http.createServer(async (req, res) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Referrer-Policy', 'no-referrer');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    if (secure) res.setHeader('Strict-Transport-Security', 'max-age=31536000');
     res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'");
     try {
       const url = new URL(req.url, 'http://x');
@@ -84,11 +87,14 @@ function createServer(db, opts = {}) {
       const token = cookies(req).sid;
 
       if (route === 'POST /api/login') {
+        if (throttle.blocked(ip)) { audit.log(db, null, 'login_throttled', { ip }); return fail(res, 429, 'Too many failed sign-ins from this computer. Try again later.'); }
         const r = auth.login(db, body.username, body.password);
         if (r.error) {
+          throttle.fail(ip);
           audit.log(db, null, 'login_failed', { detail: String(body.username || '').slice(0, 60), ip });
           return fail(res, r.error === 'locked' ? 429 : 401, r.error === 'locked' ? 'Account temporarily locked' : 'Wrong username or password');
         }
+        throttle.clear(ip);
         audit.log(db, r.user, 'login', { ip });
         const cookie = `sid=${r.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${auth.SESSION_HOURS * 3600}${secure ? '; Secure' : ''}`;
         return send(res, 200, { user: publicUser(r.user) }, { 'Set-Cookie': cookie });
@@ -107,6 +113,7 @@ function createServer(db, opts = {}) {
         const weak = auth.checkPasswordStrength(body.new); if (weak) return fail(res, 400, weak);
         const { hash, salt } = auth.hashPassword(body.new);
         db.prepare('UPDATE users SET pass_hash=?, pass_salt=?, must_change=0 WHERE id=?').run(hash, salt, user.id);
+        auth.endSessions(db, user.id, token); // other devices must sign in again
         audit.log(db, user, 'password_changed', { ip });
         return send(res, 200, { ok: true });
       }
@@ -174,7 +181,7 @@ function createServer(db, opts = {}) {
       }
       if (route === 'GET /api/users') {
         if (!can(user.role, 'user.admin')) return fail(res, 403, 'Not allowed');
-        return send(res, 200, { users: db.prepare('SELECT id,username,full_name,role,lang,active,must_change FROM users ORDER BY id').all() });
+        return send(res, 200, { users: db.prepare('SELECT id,username,full_name,role,lang,active,must_change,locked_until FROM users ORDER BY id').all() });
       }
       if (route === 'POST /api/users') {
         if (!can(user.role, 'user.admin')) return fail(res, 403, 'Not allowed');
@@ -187,6 +194,41 @@ function createServer(db, opts = {}) {
         db.prepare('INSERT INTO users(username,full_name,role,pass_hash,pass_salt,must_change) VALUES(?,?,?,?,?,1)').run(username, full, body.role, hash, salt);
         audit.log(db, user, 'user_created', { detail: username + ' (' + body.role + ')', ip });
         return send(res, 201, { ok: true });
+      }
+      const um = /^PUT \/api\/users\/(\d+)$/.exec(route);
+      if (um) {
+        if (!can(user.role, 'user.admin')) return fail(res, 403, 'Not allowed');
+        const target = db.prepare('SELECT * FROM users WHERE id=?').get(Number(um[1]));
+        if (!target) return fail(res, 404, 'No such user');
+        const self = target.id === user.id;
+        const lastAdmin = () => target.role === 'admin' && target.active && db.prepare("SELECT COUNT(*) n FROM users WHERE role='admin' AND active=1").get().n <= 1;
+        if (body.active !== undefined) {
+          const on = body.active ? 1 : 0;
+          if (!on && self) return fail(res, 400, 'You cannot deactivate your own account');
+          if (!on && lastAdmin()) return fail(res, 400, 'The last active administrator cannot be deactivated');
+          db.prepare('UPDATE users SET active=? WHERE id=?').run(on, target.id);
+          if (!on) auth.endSessions(db, target.id);
+          audit.log(db, user, on ? 'user_reactivated' : 'user_deactivated', { detail: target.username, ip });
+        }
+        if (body.role !== undefined) {
+          if (!ROLES[body.role]) return fail(res, 400, 'Unknown role');
+          if (self && body.role !== target.role) return fail(res, 400, 'You cannot change your own role');
+          if (body.role !== 'admin' && lastAdmin()) return fail(res, 400, 'The last active administrator cannot lose the role');
+          if (body.role !== target.role) {
+            db.prepare('UPDATE users SET role=? WHERE id=?').run(body.role, target.id);
+            auth.endSessions(db, target.id); // they sign in again so the change applies cleanly
+            audit.log(db, user, 'user_role_changed', { detail: target.username + ': ' + target.role + ' -> ' + body.role, ip });
+          }
+        }
+        if (body.password !== undefined) {
+          const weak = auth.checkPasswordStrength(body.password); if (weak) return fail(res, 400, weak);
+          const { hash, salt } = auth.hashPassword(body.password);
+          db.prepare('UPDATE users SET pass_hash=?, pass_salt=?, must_change=1, failed_count=0, locked_until=0 WHERE id=?').run(hash, salt, target.id);
+          if (!self) auth.endSessions(db, target.id);
+          audit.log(db, user, 'user_password_reset', { detail: target.username, ip });
+        }
+        if (body.unlock) { db.prepare('UPDATE users SET failed_count=0, locked_until=0 WHERE id=?').run(target.id); audit.log(db, user, 'user_unlocked', { detail: target.username, ip }); }
+        return send(res, 200, { ok: true });
       }
       return fail(res, 404, 'Unknown API route');
     } catch (e) {

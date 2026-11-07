@@ -47,7 +47,7 @@ Doctor/medic, Nurse, Midwife, Pharmacist, Lab technician, Registration clerk, HI
 | M7 ✅ | Referrals and continuity | Referral out/back, printable referral and discharge summaries, appointments and reminders |
 | M8 ✅ | Inpatient and procedures | Admissions, beds, ward notes, discharge, procedures log, blood bank inventory |
 | M9 ✅ | Reporting | Morbidity, MCH, immunization, stock, workload; donor report templates; CSV/Excel export; dashboards |
-| M10 | Hardening and handover | Backups and restore test, security review checklist, performance on low-spec PC, user guide, admin guide, training deck, source handover |
+| M10 ✅ | Hardening and handover | Backups and restore test, security review checklist, performance on low-spec PC, user guide, admin guide, training deck, source handover |
 
 Scope warning: "everything" is about 10 milestones. Plan to show M1–M3 to the clinic early and adjust the rest from their feedback instead of finishing all ten blind.
 
@@ -105,3 +105,11 @@ See `emr-prototype/DISCOVERY_QUESTIONS.md`. Answers on forms, drug list, lab lis
 - **Definitions travel with the numbers:** every indicator has a written definition shown on screen and in exports, so a donor reading the file can see exactly what was counted. The two donor templates (monthly activity, quarterly programme) are drafts built from the same indicators.
 - **Coverage is among registered patients, not the whole community.** Immunization coverage and similar rates use the clinic's own registered children as the denominator and say so.
 - Excel files are real .xlsx workbooks (one sheet per section); CSV opens correctly in Excel (UTF-8 with a byte-order mark) and cannot run formulas (cells starting with =, +, - or @ are neutralised).
+
+## M10 design decisions (hardening and handover) - to confirm with the clinic
+- **Idle timeout 60 minutes, absolute 10 hours.** Short enough for shared computers, long enough for a busy clinic. Adjust `IDLE_MINUTES` in `lib/auth.js`.
+- **User administration is deliberately small:** deactivate (never delete, so the audit trail keeps names), reset password, unlock, change role. Nobody can deactivate themselves or change their own role.
+- **Backups are files, not a service.** One command, safe while running, verified at creation and again before any restore. Encryption is opt-in through a passphrase the clinic must keep safely; losing it loses the backups.
+- **Restore never deletes.** The current database is moved aside; an old journal travels with it.
+- **A database from a newer program version is refused** rather than opened by older code.
+- **Known security limits** (plain HTTP, unencrypted database file, no two-factor sign-in, audit log not tamper-evident) are listed openly in `docs/SECURITY_REVIEW.md` with a go-live gate.

@@ -1,6 +1,6 @@
 # Clinic EMR (volunteer prototype)
 
-A working, multi-user electronic medical record prototype for a community clinic. **Demo data only. Do not enter real patient information.** See `PLAN.md` for the full roadmap (10 milestones). Milestones **M1 (foundation)**, **M2 (outpatient core)** and **M3 (lab, prescribing, dispensing, stock)** **M4 (maternal and child health)** and **M5 (child health)** and **M6 (programmes)** and **M7 (referrals, summaries, appointments, follow-up)** and **M8 (inpatient, procedures, blood bank)** and **M9 (reporting)** are done.
+A working, multi-user electronic medical record prototype for a community clinic. **Demo data only. Do not enter real patient information.** See `PLAN.md` for the full roadmap (10 milestones). Milestones **M1 (foundation)**, **M2 (outpatient core)** and **M3 (lab, prescribing, dispensing, stock)** **M4 (maternal and child health)** and **M5 (child health)** and **M6 (programmes)** and **M7 (referrals, summaries, appointments, follow-up)** and **M8 (inpatient, procedures, blood bank)** and **M9 (reporting)** and **M10 (hardening and handover)** are done. Start with `docs/HANDOVER.md`.
 
 ## What works now (M1)
 - Sign-in with roles (doctor, nurse, midwife, pharmacist, lab, registration, HIS, program officer, admin); lockout after 5 failed attempts; forced password change for new users
@@ -130,3 +130,10 @@ Burmese text is a **draft by a non-native speaker and needs review**. Karen has 
 - **Privacy:** aggregate numbers only, no patient lists. For sensitive indicators (HIV, hepatitis B and syphilis tests, maternal and inpatient deaths) counts of 1 to 4 show as "<5" in exports and on screen for roles without HIV access; sensitive breakdowns are never produced.
 - Coverage rates use the clinic's registered patients as denominator, and say so.
 - **Needs clinical and donor review:** every indicator definition, the age groups, the morbidity code list, and the report layouts. Report titles and definitions are English only (donors read them in English).
+
+## Added in M10 (hardening and handover)
+- **Sign-in and sessions:** signed out after 60 minutes idle; changing a password signs out other devices; per-computer throttle on failed sign-ins; extra browser security headers.
+- **User administration:** Users screen can deactivate and reactivate, reset passwords, unlock accounts. Administrators cannot lock themselves out.
+- **Backups:** `backup.bat` / `backup.sh` (safe while running, verified, optional passphrase encryption, keeps the newest 30). `node tools/restore.js <file> [--check-only] [--yes]` keeps your current database aside and refuses damaged or newer-version files.
+- **Speed:** covering index for visit queries; reports rewritten to scan visits once. `node tools/loadtest.js` builds a fake large database (30,000 patients in about 2 seconds) and times the screens.
+- **Documents:** `docs/ADMIN_GUIDE.md`, `docs/USER_GUIDE.md`, `docs/TRAINING.md`, `docs/SECURITY_REVIEW.md`, `docs/HANDOVER.md`.

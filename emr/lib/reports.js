@@ -26,10 +26,10 @@ const sexCols = (r) => ({ female: r.f, male: r.m, other: r.o });
 const REPORTS = {
   morbidity: { title: 'Morbidity: diagnoses by age and sex', run(db, from, to, { mask, allDx }) {
     const ag = U.ageGroupSql('e.visit_date', 'p.dob');
-    const rows = all(db, `SELECT d.code, i.name, COUNT(*) total, SUM(p.sex='F') f, SUM(p.sex='M') m, SUM(p.sex='O') o,
-      SUM(${ag}='u1') a1, SUM(${ag}='1_4') a2, SUM(${ag}='5_14') a3, SUM(${ag}='15_24') a4, SUM(${ag}='25_49') a5, SUM(${ag}='50p') a6
-      FROM diagnoses d JOIN encounters e ON e.id=d.encounter_id JOIN patients p ON p.id=e.patient_id JOIN icd10 i ON i.code=d.code
-      WHERE e.status='signed' AND e.visit_date BETWEEN ? AND ? ${allDx ? '' : "AND d.kind='primary'"} GROUP BY d.code ORDER BY total DESC, d.code`, from, to).map((r) => {
+    const rows = all(db, `SELECT x.code, i.name, COUNT(*) total, SUM(x.sex='F') f, SUM(x.sex='M') m, SUM(x.sex='O') o,
+      SUM(x.g='u1') a1, SUM(x.g='1_4') a2, SUM(x.g='5_14') a3, SUM(x.g='15_24') a4, SUM(x.g='25_49') a5, SUM(x.g='50p') a6
+      FROM (SELECT code, sex, ${U.ageGroupOfDays('days')} g FROM (SELECT d.code code, p.sex sex, (julianday(e.visit_date)-julianday(p.dob)) days FROM diagnoses d JOIN encounters e ON e.id=d.encounter_id JOIN patients p ON p.id=e.patient_id
+      WHERE e.status='signed' AND e.visit_date BETWEEN ? AND ? ${allDx ? '' : "AND d.kind='primary'"})) x JOIN icd10 i ON i.code=x.code GROUP BY x.code ORDER BY total DESC, x.code`, from, to).map((r) => {
       if (SENSITIVE_DX.includes(r.code)) return { code: r.code, diagnosis: r.name + ' (sensitive: total only)', total: mask ? U.suppress(r.total) : r.total };
       return { code: r.code, diagnosis: r.name, total: r.total, female: r.f, male: r.m, other: r.o, u1: r.a1, a1_4: r.a2, a5_14: r.a3, a15_24: r.a4, a25_49: r.a5, a50p: r.a6 };
     });
@@ -42,7 +42,10 @@ const REPORTS = {
       { title: 'Visits per day', columns: [col('date', 'Date'), col('visits', 'Signed visits')], rows: all(db, "SELECT visit_date date, COUNT(*) visits FROM encounters WHERE status='signed' AND visit_date BETWEEN ? AND ? GROUP BY visit_date ORDER BY visit_date", from, to) },
       { title: 'Visits by type', columns: [col('type', 'Visit type'), col('visits', 'Signed visits')], rows: all(db, "SELECT type, COUNT(*) visits FROM encounters WHERE status='signed' AND visit_date BETWEEN ? AND ? GROUP BY type ORDER BY visits DESC", from, to) },
       { title: 'Visits by age and sex', columns: [col('age', 'Age group'), col('female', 'Female'), col('male', 'Male'), col('other', 'Other'), col('total', 'Total')],
-        rows: U.AGE_GROUPS.map(([k, l]) => { const r = db.prepare(`SELECT COUNT(*) t, COALESCE(SUM(p.sex='F'),0) f, COALESCE(SUM(p.sex='M'),0) m, COALESCE(SUM(p.sex='O'),0) o FROM encounters e JOIN patients p ON p.id=e.patient_id WHERE e.status='signed' AND e.visit_date BETWEEN ? AND ? AND ${ag}='${k}'`).get(from, to); return { age: l, ...sexCols(r), total: r.t }; }) }];
+        rows: (() => { // one pass over the visits, not one per age group
+          const by = Object.fromEntries(all(db, `SELECT g, COUNT(*) t, SUM(sex='F') f, SUM(sex='M') m, SUM(sex='O') o FROM (SELECT ${U.ageGroupOfDays('days')} g, sex FROM (SELECT (julianday(e.visit_date)-julianday(p.dob)) days, p.sex sex FROM encounters e JOIN patients p ON p.id=e.patient_id WHERE e.status='signed' AND e.visit_date BETWEEN ? AND ?)) GROUP BY g`, from, to).map((r) => [r.g, r]));
+          return U.AGE_GROUPS.map(([k, l]) => { const r = by[k] || { t: 0, f: 0, m: 0, o: 0 }; return { age: l, ...sexCols(r), total: r.t }; });
+        })() }];
   } },
   maternal: { title: 'Maternal health and family planning', run(db, from, to, { mask }) {
     return [indSection(db, 'Indicators', 'maternal', from, to, mask),

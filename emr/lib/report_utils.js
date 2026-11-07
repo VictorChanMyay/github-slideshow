@@ -5,7 +5,9 @@ const suppress = (v) => (typeof v === 'number' && v > 0 && v < MIN_CELL ? '<5' :
 
 // SQL fragment: age group on a given date column, for a patients alias
 const AGE_GROUPS = [['u1', '<1 year'], ['1_4', '1-4 years'], ['5_14', '5-14 years'], ['15_24', '15-24 years'], ['25_49', '25-49 years'], ['50p', '50+ years']];
-const ageGroupSql = (dateCol, dobCol) => `CASE WHEN (julianday(${dateCol})-julianday(${dobCol}))<365.25 THEN 'u1' WHEN (julianday(${dateCol})-julianday(${dobCol}))<1826.25 THEN '1_4' WHEN (julianday(${dateCol})-julianday(${dobCol}))<5478.75 THEN '5_14' WHEN (julianday(${dateCol})-julianday(${dobCol}))<9131.25 THEN '15_24' WHEN (julianday(${dateCol})-julianday(${dobCol}))<18262.5 THEN '25_49' ELSE '50p' END`;
+// Age group from an expression that already holds the age in days (compute it once per row for speed).
+const ageGroupOfDays = (d) => `CASE WHEN ${d}<365.25 THEN 'u1' WHEN ${d}<1826.25 THEN '1_4' WHEN ${d}<5478.75 THEN '5_14' WHEN ${d}<9131.25 THEN '15_24' WHEN ${d}<18262.5 THEN '25_49' ELSE '50p' END`;
+const ageGroupSql = (dateCol, dobCol) => ageGroupOfDays(`(julianday(${dateCol})-julianday(${dobCol}))`);
 
 // CSV: UTF-8 with a byte-order mark so Excel reads Burmese and Karen text. Cells that start like a formula are neutralised.
 const csvCell = (v) => {
@@ -23,4 +25,4 @@ function toCsv(title, sections, meta = []) {
   }
   return '﻿' + lines.join('\r\n') + '\r\n';
 }
-module.exports = { MIN_CELL, suppress, AGE_GROUPS, ageGroupSql, csvCell, toCsv };
+module.exports = { MIN_CELL, suppress, AGE_GROUPS, ageGroupSql, ageGroupOfDays, csvCell, toCsv };

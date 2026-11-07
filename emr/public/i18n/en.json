@@ -1287,5 +1287,19 @@
 "rep.export_xlsx": "Download Excel",
 "rep.no_export": "Your role can read reports but not download them.",
 "rep.empty": "No records in this period.",
-"rep.footer": "These are aggregate numbers only: no report lists patients. Definitions describe exactly what was counted. Report titles and definitions are in English for donors. Coverage rates use the clinic's registered patients, not the whole community."
+"rep.footer": "These are aggregate numbers only: no report lists patients. Definitions describe exactly what was counted. Report titles and definitions are in English for donors. Coverage rates use the clinic's registered patients, not the whole community.",
+"users.status": "Status",
+"users.actions": "Actions",
+"users.active": "Active",
+"users.inactive": "Deactivated",
+"users.locked": "locked after failed sign-ins",
+"users.deactivate": "Deactivate",
+"users.reactivate": "Reactivate",
+"users.deactivated": "User deactivated and signed out.",
+"users.reactivated": "User reactivated.",
+"users.reset": "Reset password",
+"users.reset_prompt": "Type a new temporary password (at least 10 characters, letters and numbers). The person must change it at next sign-in.",
+"users.reset_done": "Password reset. Give the temporary password to the person privately.",
+"users.unlock": "Unlock",
+"users.unlocked": "Account unlocked."
 }

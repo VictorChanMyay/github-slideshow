@@ -315,6 +315,14 @@ const MIGRATIONS = [
     post_temp REAL, post_pulse REAL, post_sys REAL, post_dia REAL, reaction TEXT NOT NULL CHECK(reaction IN ('none','mild','severe')), reaction_note TEXT, by_user INTEGER REFERENCES users(id), recorded_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
   `,
+  // 9: idle-timeout for sessions
+  `
+  ALTER TABLE sessions ADD COLUMN last_seen INTEGER NOT NULL DEFAULT 0;
+  `,
+  // 10: covering index so reports and the dashboard do not read every visit row
+  `
+  CREATE INDEX enc_status_date ON encounters(status, visit_date, patient_id, type);
+  `,
 ];
 
 function open(file) {
@@ -331,6 +339,7 @@ function migrate(db) {
   const row = db.prepare('SELECT v FROM schema_version').get();
   let v = row ? row.v : 0;
   if (!row) db.prepare('INSERT INTO schema_version(v) VALUES(0)').run();
+  if (v > MIGRATIONS.length) throw new Error(`This database was made by a newer version of the program (schema ${v}, this program knows ${MIGRATIONS.length}). Update the program; do not open it with an older copy.`);
   while (v < MIGRATIONS.length) {
     db.exec('BEGIN');
     try {
@@ -378,4 +387,4 @@ function tx(db, fn) {
   catch (e) { db.exec('ROLLBACK'); throw e; }
 }
 
-module.exports = { open, tx };
+module.exports = { open, tx, SCHEMA_VERSION: MIGRATIONS.length };
