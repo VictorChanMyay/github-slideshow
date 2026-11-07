@@ -265,6 +265,56 @@ const MIGRATIONS = [
   );
   CREATE INDEX reminders_appt ON appointment_reminders(appointment_id);
   `,
+  // 8: inpatient care, procedures and the blood bank
+  `
+  CREATE TABLE wards(id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, kind TEXT NOT NULL DEFAULT 'general' CHECK(kind IN ('general','maternity','paediatric','isolation','other')), active INTEGER NOT NULL DEFAULT 1);
+  CREATE TABLE beds(id INTEGER PRIMARY KEY, ward_id INTEGER NOT NULL REFERENCES wards(id), label TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','out_of_service')), UNIQUE(ward_id, label));
+  CREATE TABLE admissions(
+    id INTEGER PRIMARY KEY, adm_no TEXT NOT NULL UNIQUE, patient_id INTEGER NOT NULL REFERENCES patients(id), encounter_id INTEGER REFERENCES encounters(id),
+    ward_id INTEGER NOT NULL REFERENCES wards(id), bed_id INTEGER NOT NULL REFERENCES beds(id), admitted_at TEXT NOT NULL DEFAULT (datetime('now')), admitted_by INTEGER REFERENCES users(id),
+    reason TEXT NOT NULL, admit_dx_code TEXT REFERENCES icd10(code), admit_dx_text TEXT, condition TEXT NOT NULL DEFAULT 'stable' CHECK(condition IN ('stable','serious','critical')),
+    isolation INTEGER NOT NULL DEFAULT 0, isolation_override TEXT, obs_every_hours INTEGER NOT NULL DEFAULT 4,
+    status TEXT NOT NULL DEFAULT 'admitted' CHECK(status IN ('admitted','discharged')), discharged_at TEXT, discharged_by INTEGER REFERENCES users(id),
+    discharge_type TEXT CHECK(discharge_type IN ('discharged','referred','transferred','absconded','died')), discharge_condition TEXT, discharge_dx_code TEXT REFERENCES icd10(code), discharge_dx_text TEXT,
+    stay_summary TEXT, discharge_medicines TEXT, follow_up TEXT, cause_of_death TEXT
+  );
+  CREATE UNIQUE INDEX one_patient_per_bed ON admissions(bed_id) WHERE status='admitted';
+  CREATE UNIQUE INDEX one_active_admission ON admissions(patient_id) WHERE status='admitted';
+  CREATE INDEX adm_patient ON admissions(patient_id);
+  CREATE TABLE bed_moves(id INTEGER PRIMARY KEY, admission_id INTEGER NOT NULL REFERENCES admissions(id), from_bed_id INTEGER REFERENCES beds(id), to_bed_id INTEGER NOT NULL REFERENCES beds(id), reason TEXT, by_user INTEGER REFERENCES users(id), at TEXT NOT NULL DEFAULT (datetime('now')));
+  CREATE TABLE ward_notes(id INTEGER PRIMARY KEY, admission_id INTEGER NOT NULL REFERENCES admissions(id), kind TEXT NOT NULL CHECK(kind IN ('round','nursing','event','correction')), text TEXT NOT NULL, by_user INTEGER REFERENCES users(id), at TEXT NOT NULL DEFAULT (datetime('now')));
+  CREATE INDEX notes_adm ON ward_notes(admission_id);
+  CREATE TABLE inpatient_obs(id INTEGER PRIMARY KEY, admission_id INTEGER NOT NULL REFERENCES admissions(id), recorded_at TEXT NOT NULL DEFAULT (datetime('now')), temp REAL, sys REAL, dia REAL, pulse REAL, rr REAL, spo2 REAL, fluid_in_ml INTEGER, urine_ml INTEGER, notes TEXT, by_user INTEGER REFERENCES users(id));
+  CREATE INDEX obs_adm ON inpatient_obs(admission_id);
+  CREATE TABLE procedure_types(code TEXT PRIMARY KEY, name TEXT NOT NULL, surgical INTEGER NOT NULL DEFAULT 0, needs_consent INTEGER NOT NULL DEFAULT 1, active INTEGER NOT NULL DEFAULT 1);
+  CREATE TABLE procedures(
+    id INTEGER PRIMARY KEY, patient_id INTEGER NOT NULL REFERENCES patients(id), encounter_id INTEGER REFERENCES encounters(id), admission_id INTEGER REFERENCES admissions(id), type_code TEXT NOT NULL REFERENCES procedure_types(code),
+    performed_on TEXT NOT NULL, performed_time TEXT, performed_by INTEGER REFERENCES users(id), assistant TEXT, indication TEXT NOT NULL, anaesthesia TEXT NOT NULL DEFAULT 'none' CHECK(anaesthesia IN ('none','local','spinal','general','sedation')),
+    consent_obtained INTEGER NOT NULL DEFAULT 0, consent_note TEXT, checklist_signin INTEGER NOT NULL DEFAULT 0, checklist_timeout INTEGER NOT NULL DEFAULT 0, checklist_signout INTEGER NOT NULL DEFAULT 0,
+    findings TEXT, complications TEXT, outcome TEXT NOT NULL DEFAULT 'uncomplicated' CHECK(outcome IN ('uncomplicated','complication','referred')), voided INTEGER NOT NULL DEFAULT 0, void_reason TEXT, recorded_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX proc_patient ON procedures(patient_id);
+  CREATE INDEX proc_date ON procedures(performed_on);
+  CREATE TABLE blood_units(
+    id INTEGER PRIMARY KEY, unit_no TEXT NOT NULL UNIQUE, abo TEXT NOT NULL CHECK(abo IN ('A','B','AB','O')), rh TEXT NOT NULL CHECK(rh IN ('pos','neg')),
+    component TEXT NOT NULL CHECK(component IN ('whole_blood','red_cells','plasma','platelets')), volume_ml INTEGER NOT NULL, collected_on TEXT NOT NULL, expires_on TEXT NOT NULL, donor_ref TEXT,
+    hiv TEXT NOT NULL DEFAULT 'pending' CHECK(hiv IN ('negative','positive','pending')), hbv TEXT NOT NULL DEFAULT 'pending' CHECK(hbv IN ('negative','positive','pending')),
+    hcv TEXT NOT NULL DEFAULT 'pending' CHECK(hcv IN ('negative','positive','pending')), syphilis TEXT NOT NULL DEFAULT 'pending' CHECK(syphilis IN ('negative','positive','pending')),
+    malaria TEXT NOT NULL DEFAULT 'pending' CHECK(malaria IN ('negative','positive','pending')),
+    status TEXT NOT NULL DEFAULT 'quarantine' CHECK(status IN ('quarantine','available','issued','transfused','discarded')), discard_reason TEXT, discard_code TEXT,
+    registered_by INTEGER REFERENCES users(id), registered_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE blood_issues(
+    id INTEGER PRIMARY KEY, unit_id INTEGER NOT NULL REFERENCES blood_units(id), patient_id INTEGER NOT NULL REFERENCES patients(id), admission_id INTEGER REFERENCES admissions(id), issued_by INTEGER REFERENCES users(id),
+    issued_at TEXT NOT NULL DEFAULT (datetime('now')), indication TEXT NOT NULL, recipient_group TEXT, crossmatch TEXT NOT NULL CHECK(crossmatch IN ('compatible','not_required','emergency_uncrossmatched')), emergency_reason TEXT,
+    status TEXT NOT NULL DEFAULT 'issued' CHECK(status IN ('issued','transfused','returned')), return_reason TEXT
+  );
+  CREATE INDEX issues_patient ON blood_issues(patient_id);
+  CREATE TABLE transfusions(
+    id INTEGER PRIMARY KEY, issue_id INTEGER NOT NULL UNIQUE REFERENCES blood_issues(id), started_at TEXT NOT NULL, ended_at TEXT, volume_given_ml INTEGER, pre_temp REAL, pre_pulse REAL, pre_sys REAL, pre_dia REAL,
+    post_temp REAL, post_pulse REAL, post_sys REAL, post_dia REAL, reaction TEXT NOT NULL CHECK(reaction IN ('none','mild','severe')), reaction_note TEXT, by_user INTEGER REFERENCES users(id), recorded_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  `,
 ];
 
 function open(file) {
@@ -298,6 +348,12 @@ function seedReference(db) {
     tx(db, () => { for (const [c, name] of require('./icd10')) ins.run(c, name); });
   }
   if (db.prepare('SELECT COUNT(*) c FROM referral_destinations').get().c === 0) db.prepare("INSERT INTO referral_destinations(name,type) VALUES('Mae Sot Hospital','hospital')").run(); // name only: the clinic adds contacts and other services
+  const { WARDS, PROCEDURES } = require('./inpatient_seed');
+  if (db.prepare('SELECT COUNT(*) c FROM wards').get().c === 0) {
+    const w = db.prepare('INSERT INTO wards(name,kind) VALUES(?,?)'), b = db.prepare('INSERT INTO beds(ward_id,label) VALUES(?,?)');
+    tx(db, () => { for (const [name, kind, beds] of WARDS) { const id = Number(w.run(name, kind).lastInsertRowid); for (const l of beds) b.run(id, l); } });
+  }
+  if (db.prepare('SELECT COUNT(*) c FROM procedure_types').get().c === 0) { const ins = db.prepare('INSERT INTO procedure_types(code,name,surgical,needs_consent) VALUES(?,?,?,?)'); tx(db, () => { for (const x of PROCEDURES) ins.run(...x); }); }
   const { VACCINES, DOSES } = require('./immunization_seed');
   if (db.prepare('SELECT COUNT(*) c FROM vaccines').get().c === 0) {
     const v = db.prepare('INSERT INTO vaccines(code,name) VALUES(?,?)'), d = db.prepare('INSERT INTO vaccine_doses(vaccine_code,dose_no,due_days,min_age_days,min_interval_days,max_age_days,late_days) VALUES(?,?,?,?,?,?,?)');

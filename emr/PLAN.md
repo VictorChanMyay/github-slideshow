@@ -45,7 +45,7 @@ Doctor/medic, Nurse, Midwife, Pharmacist, Lab technician, Registration clerk, HI
 | M5 ✅ | Child health | Immunization schedule with due/overdue, growth charts (WHO z-scores), nutrition screening |
 | M6 ✅ | Programs | TB, HIV (extra confidentiality), malaria, chronic disease follow-up with recall lists |
 | M7 ✅ | Referrals and continuity | Referral out/back, printable referral and discharge summaries, appointments and reminders |
-| M8 | Inpatient and procedures | Admissions, beds, ward notes, discharge, procedures log, blood bank inventory |
+| M8 ✅ | Inpatient and procedures | Admissions, beds, ward notes, discharge, procedures log, blood bank inventory |
 | M9 | Reporting | Morbidity, MCH, immunization, stock, workload; donor report templates; CSV/Excel export; dashboards |
 | M10 | Hardening and handover | Backups and restore test, security review checklist, performance on low-spec PC, user guide, admin guide, training deck, source handover |
 
@@ -88,3 +88,12 @@ See `emr-prototype/DISCOVERY_QUESTIONS.md`. Answers on forms, drug list, lab lis
 - **Appointments never name a diagnosis:** purposes are generic ("programme", "child health"...), and HIV follow-up is never an appointment purpose. Reminder phone numbers are shown only if the patient agreed to reminders, and never for restricted patients.
 - **The follow-up list** merges overdue contacts from every module, but each person only sees what their role may see: a registration clerk sees appointments only, never that someone is overdue for TB or antenatal care.
 - No SMS gateway yet: reminders are a call list where staff record the result. Inpatient discharge summaries come with M8 (inpatient); M7 gives a take-home visit summary and the referral letter.
+
+## M8 design decisions (inpatient, procedures, blood bank) - to confirm with the clinic
+- **Beds:** one patient per bed and one active admission per patient, enforced by the database itself, not only by the screens. The wards and beds seeded are generic placeholders (Adult, Maternity, Children, Isolation); the clinic edits them.
+- **Isolation rule:** a patient admitted as needing isolation cannot be placed in a non-isolation ward without a written reason.
+- **Discharge:** needs a summary and a condition; "died" needs a cause; it is blocked while a blood unit issued to the patient is neither transfused nor returned. The bed is freed automatically. A follow-up appointment can be booked from the discharge form.
+- **Restricted patients on the ward:** staff can record observations and notes and move beds by MRN (task-level access, like the lab) but cannot read the admission without the access reason.
+- **Procedures:** consent is required (emergency exception with a written reason). Surgical procedures also need the three WHO safety checklist steps (sign in, time out, sign out) and a surgical role. Records are never edited: a wrong entry is voided with a reason.
+- **Blood bank:** a unit is "quarantine" until all five screening tests (HIV, hepatitis B, hepatitis C, syphilis, malaria) are negative; any positive discards it automatically. **Donor screening results are visible only to blood bank staff:** doctors and nurses see only "discarded after screening". Issuing needs the patient's recorded blood group and a compatible unit; with no known group, only an O-negative emergency issue with a written reason is possible. Red cells need the crossmatch confirmed. Expired units are never issued. A returned unit is discarded (cold chain unknown).
+- **Not in M8:** inpatient medicine charting (a medication administration record), fluid balance targets, nutrition orders, and donor notification and counselling. They need the clinic's own protocols.

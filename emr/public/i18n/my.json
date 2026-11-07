@@ -219,5 +219,19 @@
 "fu.astatus.scheduled": "ချိန်းထား",
 "fu.astatus.attended": "လာရောက်ပြီး",
 "fu.astatus.cancelled": "ပယ်ဖျက်ပြီး",
-"fu.astatus.missed": "မလာခဲ့"
+"fu.astatus.missed": "မလာခဲ့",
+"nav.inpatients": "လူနာတင်ဆေးကုသမှု",
+"nav.procedures": "ဆေးကုသမှုလုပ်ငန်းစဉ်များ",
+"nav.blood": "သွေးဘဏ်",
+"adm.title": "ဆေးရုံတင်ခြင်း",
+"adm.admit": "ဆေးရုံတင်ရန်",
+"adm.discharge": "ဆေးရုံဆင်းရန်",
+"adm.cond.stable": "တည်ငြိမ်",
+"adm.cond.serious": "ပြင်းထန်",
+"adm.cond.critical": "အန္တရာယ်ရှိ",
+"adm.free": "လွတ်",
+"adm.occupied": "အသုံးပြုထား",
+"blood.title": "သွေးနှင့် သွေးသွင်းခြင်း",
+"blood.group": "သွေးအုပ်စု",
+"proc.title": "ဆေးကုသမှုလုပ်ငန်းစဉ်များ"
 }

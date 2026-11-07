@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const dir = path.join(__dirname, '..', 'public');
 const en = JSON.parse(fs.readFileSync(path.join(dir, 'i18n', 'en.json'), 'utf8'));
-const src = ['app.js', 'clinical.js', 'orders.js', 'mch.js', 'child.js', 'programs.js', 'continuity.js'].map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
+const src = ['app.js', 'clinical.js', 'orders.js', 'mch.js', 'child.js', 'programs.js', 'continuity.js', 'inpatient.js'].map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
 
 test('every literal t("key") used in the screens exists in English', () => {
   const keys = [...src.matchAll(/\bt\('([A-Za-z0-9_.]+)'\)/g)].map((m) => m[1]);
@@ -101,4 +101,17 @@ test('every appointment purpose, contact method, referral urgency and state from
   for (const v of ['appointment', 'referral', 'anc', 'postnatal', 'fp', 'immunization', 'programme']) assert.ok(`fu.kind.${v}` in en, v);
   const fu = fs.readFileSync(path.join(__dirname, '..', 'lib', 'followup.js'), 'utf8'); for (const k of [...fu.matchAll(/add\('([a-z]+)'/g)].map((m) => m[1])) assert.ok(`fu.kind.${k}` in en, 'follow-up kind ' + k);
   assert.ok(!ap.PURPOSES.includes('hiv') && !ap.PURPOSES.includes('tb')); // an appointment can never name a diagnosis
+});
+
+test('every inpatient, procedure and blood bank option, status and message from the server has text', () => {
+  const ip = require('../lib/inpatient'); const pr = require('../lib/procedures'); const bl = require('../lib/blood'); const rules = require('../lib/inpatient_rules');
+  for (const v of ip.CONDITIONS) assert.ok(`adm.cond.${v}` in en, v); for (const v of ip.NOTE_KINDS) assert.ok(`adm.note.${v}` in en, v); for (const v of ip.DISCHARGE_TYPES) assert.ok(`adm.dtype.${v}` in en, v);
+  for (const v of pr.OUTCOMES) assert.ok(`proc.outcome.${v}` in en, v); for (const v of pr.ANAESTHESIA) assert.ok(`proc.anaes.${v}` in en, v); for (const v of ['consent_needed', 'checklist_incomplete']) assert.ok(`proc.problem.${v}` in en, v);
+  for (const v of bl.COMPONENTS) assert.ok(`blood.comp.${v}` in en, v); for (const v of bl.REACTIONS) assert.ok(`blood.reaction.${v}` in en, v); for (const v of rules.TESTS) assert.ok(`blood.test.${v}` in en, v);
+  for (const v of ['pending', 'negative', 'positive']) assert.ok(`blood.result.${v}` in en, v); for (const v of ['hold', 'release', 'discard']) assert.ok(`blood.outcome.${v}` in en, v);
+  for (const v of ['quarantine', 'available', 'issued', 'transfused', 'discarded', 'expired']) assert.ok(`blood.ustatus.${v}` in en, v); for (const v of ['issued', 'transfused', 'returned']) assert.ok(`blood.issue_status.${v}` in en, v);
+  for (const v of ['abo_incompatible', 'rh_positive_to_negative', 'recipient_group_unknown']) assert.ok(`blood.why.${v}` in en, v); for (const v of ['stock', 'units', 'issued', 'history']) assert.ok(`blood.tab.${v}` in en, v);
+  for (const v of ['general', 'maternity', 'paediatric', 'isolation', 'other']) assert.ok(`ward.kind.${v}` in en, v); assert.ok('flag.title' in en);
+  const seed = require('../lib/inpatient_seed'); for (const w of seed.WARDS) assert.ok(`ward.kind.${w[1]}` in en, w[1]); // every seeded ward kind has a label
+  const sql = fs.readFileSync(path.join(__dirname, '..', 'lib', 'db.js'), 'utf8'); const kinds = /kind TEXT NOT NULL DEFAULT 'general' CHECK\(kind IN \(([^)]*)\)\)/.exec(sql); assert.ok(kinds); for (const k of kinds[1].replace(/'/g, '').split(',')) assert.ok(`ward.kind.${k.trim()}` in en, k);
 });

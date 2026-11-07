@@ -38,6 +38,10 @@ async function openPatient(pid) {
   if (r.status === 403) { alert(t('restricted.denied')); return; }
   if (!r.ok) { if (r.status !== 428) oops(r); return; }
   state.patient = r.data.patient; state.clinical = r.data.allergies ? { allergies: r.data.allergies, problems: r.data.problems, encounters: r.data.encounters } : null; // clerks get no clinical data
+  state.admissions = null; state.procs = null; state.blood = null;
+  if (can('adm.read')) { const ad = await withAccess(pid, () => api('GET', `/api/patients/${pid}/admissions`)); if (ad.ok) state.admissions = ad.data.admissions; }
+  if (can('proc.read')) { await loadProcTypes(); const pr = await withAccess(pid, () => api('GET', `/api/patients/${pid}/procedures`)); if (pr.ok) state.procs = pr.data.procedures; }
+  if (can('blood.read')) { const bl = await withAccess(pid, () => api('GET', `/api/patients/${pid}/blood`)); if (bl.ok) state.blood = bl.data; }
   state.appts = null; state.refs = null;
   if (can('appt.read')) { await loadContMeta(); const ap = await api('GET', `/api/patients/${pid}/appointments`); if (ap.ok) state.appts = ap.data.appointments; }
   if (can('ref.read')) { const rf = await withAccess(pid, () => api('GET', `/api/patients/${pid}/referrals`)); if (rf.ok) state.refs = rf.data.referrals; }

@@ -53,3 +53,8 @@ dialog.wide{max-width:820px;max-height:92vh;overflow:auto}
 .checks{display:flex;flex-wrap:wrap;gap:6px 16px;margin:6px 0}
 .prewrap{white-space:pre-wrap}
 .sigline{border-top:1px solid #888;width:260px;margin-top:36px;padding-top:4px;font-size:12px}
+.beds{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.bed{border:1px solid var(--line);border-radius:10px;padding:10px;background:#0c161b;min-height:96px}
+.bed.free{border-style:dashed}.bed.off{opacity:.55}.bed.full{border-color:#3b6a8a}.bed.critical{border-color:var(--bad)}
+.bed .who{font-weight:600;margin:2px 0}
+.wardnote{border-bottom:1px solid var(--line);padding:6px 0}
