@@ -1,0 +1,20 @@
+{
+"_name":"English",
+"app.title":"Clinic EMR","app.subtitle":"Prototype · demo data only",
+"login.title":"Sign in","login.username":"Username","login.password":"Password","login.submit":"Sign in","login.failed":"Wrong username or password","login.locked":"Account temporarily locked. Try again later.","login.notice":"Prototype with fake data only. Do not enter real patient information.",
+"pw.title":"Change your password","pw.current":"Current password","pw.new":"New password (10+ characters, letters and numbers)","pw.submit":"Change password",
+"nav.patients":"Patients","nav.audit":"Audit log","nav.users":"Users","nav.logout":"Sign out","nav.language":"Language",
+"common.save":"Save","common.cancel":"Cancel","common.back":"Back","common.add":"Add","common.remove":"Remove","common.none":"None","common.confirm":"Continue","common.yes":"Yes","common.no":"No","common.error":"Something went wrong",
+"patients.title":"Patient registry","patients.search":"Search name, MRN, phone, ID number","patients.register":"Register patient","patients.empty":"No patients found",
+"patient.mrn":"MRN","patient.name_en":"Full name (English)","patient.sex":"Sex","patient.dob":"Date of birth","patient.age":"Age","patient.dob_estimated":"Age is estimated","patient.phone":"Phone","patient.village":"Village / address","patient.ethnicity":"Ethnicity","patient.language":"Preferred language","patient.nationality":"Nationality","patient.restricted":"Restricted record","patient.restricted_help":"Access needs a reason and is logged","patient.names":"Name in other scripts","patient.ids":"ID documents","patient.no_id":"No ID document","patient.created":"Patient registered",
+"sex.F":"Female","sex.M":"Male","sex.O":"Other",
+"script.my":"Burmese","script.kar":"Karen","script.th":"Thai","script.other":"Other",
+"idtype.thai_id":"Thai ID","idtype.myanmar_id":"Myanmar ID","idtype.unhcr_camp_card":"UNHCR / camp card","idtype.passport":"Passport","idtype.other":"Other",
+"id.number":"Number","name.value":"Name",
+"dup.title":"Possible duplicate","dup.text":"A patient with the same name and date of birth already exists:","dup.confirm":"Register anyway",
+"restricted.title":"Restricted record","restricted.text":"This record is restricted. Enter the reason you need to open it. Your name and reason are saved in the audit log.","restricted.reason":"Reason","restricted.open":"Open record","restricted.short":"Please give a reason (at least 5 characters).","restricted.denied":"You do not have access to restricted records.",
+"age.years":"y","age.months":"mo","age.estimated":"estimated",
+"audit.title":"Audit log","audit.time":"Time","audit.user":"User","audit.action":"Action","audit.detail":"Detail",
+"users.title":"Users and roles","users.username":"Username","users.name":"Full name","users.role":"Role","users.password":"Temporary password","users.create":"Create user","users.created":"User created. They must change the password at first sign-in.",
+"role.doctor":"Doctor / medic","role.nurse":"Nurse","role.midwife":"Midwife","role.pharmacist":"Pharmacist","role.lab":"Lab technician","role.registration":"Registration clerk","role.his":"HIS / Records officer","role.program":"Program officer","role.admin":"Administrator"
+}

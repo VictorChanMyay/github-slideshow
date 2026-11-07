@@ -1,0 +1,19 @@
+{
+"_name":"မြန်မာ",
+"app.title":"ဆေးခန်း EMR","app.subtitle":"စမ်းသပ်မှု · နမူနာဒေတာသာ",
+"login.title":"ဝင်ရောက်ရန်","login.username":"အသုံးပြုသူအမည်","login.password":"စကားဝှက်","login.submit":"ဝင်ရောက်ရန်","login.failed":"အသုံးပြုသူအမည် သို့မဟုတ် စကားဝှက် မှားနေပါသည်","login.notice":"နမူနာဒေတာဖြင့် စမ်းသပ်ခြင်းသာဖြစ်သည်။ လူနာအစစ်အမှန် အချက်အလက်များ မထည့်ပါနှင့်။",
+"pw.title":"စကားဝှက် ပြောင်းရန်","pw.current":"လက်ရှိ စကားဝှက်","pw.submit":"စကားဝှက် ပြောင်းရန်",
+"nav.patients":"လူနာများ","nav.audit":"စစ်ဆေးမှတ်တမ်း","nav.users":"အသုံးပြုသူများ","nav.logout":"ထွက်ရန်","nav.language":"ဘာသာစကား",
+"common.save":"သိမ်းမည်","common.cancel":"မလုပ်တော့ပါ","common.back":"နောက်သို့","common.add":"ထည့်ရန်","common.remove":"ဖယ်ရှားရန်","common.none":"မရှိ","common.yes":"ဟုတ်","common.no":"မဟုတ်",
+"patients.title":"လူနာမှတ်ပုံတင်စာရင်း","patients.search":"အမည်၊ MRN၊ ဖုန်း၊ မှတ်ပုံတင်နံပါတ်ဖြင့် ရှာရန်","patients.register":"လူနာ မှတ်ပုံတင်ရန်","patients.empty":"လူနာ မတွေ့ပါ",
+"patient.mrn":"MRN","patient.name_en":"အမည် (အင်္ဂလိပ်)","patient.sex":"လိင်","patient.dob":"မွေးသက္ကရာဇ်","patient.age":"အသက်","patient.dob_estimated":"အသက်ကို ခန့်မှန်းထားခြင်း","patient.phone":"ဖုန်း","patient.village":"ရွာ / လိပ်စာ","patient.ethnicity":"လူမျိုး","patient.language":"ဘာသာစကား","patient.nationality":"နိုင်ငံသား","patient.restricted":"ကန့်သတ်ထားသော မှတ်တမ်း","patient.names":"အခြားစာလုံးဖြင့် အမည်","patient.ids":"မှတ်ပုံတင် စာရွက်စာတမ်း","patient.no_id":"မှတ်ပုံတင် မရှိ",
+"sex.F":"မ","sex.M":"ကျား","sex.O":"အခြား",
+"script.my":"မြန်မာ","script.kar":"ကရင်","script.th":"ထိုင်း","script.other":"အခြား",
+"idtype.thai_id":"ထိုင်းမှတ်ပုံတင်","idtype.myanmar_id":"မြန်မာမှတ်ပုံတင်","idtype.unhcr_camp_card":"UNHCR / စခန်းကတ်","idtype.passport":"ပတ်စပို့","idtype.other":"အခြား",
+"age.years":"နှစ်","age.months":"လ","age.estimated":"ခန့်မှန်း",
+"dup.title":"ထပ်နေနိုင်ပါသည်","dup.confirm":"မည်သို့ပင်ဖြစ်စေ မှတ်ပုံတင်မည်",
+"restricted.title":"ကန့်သတ်ထားသော မှတ်တမ်း","restricted.reason":"အကြောင်းရင်း","restricted.open":"မှတ်တမ်း ဖွင့်ရန်",
+"audit.title":"စစ်ဆေးမှတ်တမ်း","audit.time":"အချိန်","audit.user":"အသုံးပြုသူ","audit.action":"လုပ်ဆောင်ချက်",
+"users.title":"အသုံးပြုသူများနှင့် အခန်းကဏ္ဍ","users.role":"အခန်းကဏ္ဍ",
+"role.doctor":"ဆရာဝန် / ဆေးမှူး","role.nurse":"သူနာပြု","role.midwife":"မယ်ဆွေ","role.pharmacist":"ဆေးဝါးပညာရှင်","role.lab":"ဓာတ်ခွဲခန်းဝန်ထမ်း","role.registration":"မှတ်ပုံတင်ဝန်ထမ်း","role.admin":"စီမံခန့်ခွဲသူ"
+}

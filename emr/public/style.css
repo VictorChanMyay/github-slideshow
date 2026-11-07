@@ -1,0 +1,41 @@
+:root{--bg:#0b1216;--panel:#111c22;--side:#13222a;--line:#223540;--text:#e6f0f2;--mute:#8aa3ab;--accent:#4cb86a;--gold:#f2c230;--bad:#ef6b6b;--ok:#4cc38a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,"Noto Sans Myanmar","Myanmar Text","Padauk",sans-serif}
+.layout{display:flex;min-height:100vh}
+aside{width:240px;background:var(--side);border-right:1px solid var(--line);padding:14px;position:fixed;top:0;bottom:0;overflow:auto;z-index:20}
+aside h1{font-size:18px;margin:0 0 4px;color:var(--accent)}
+.sub{color:var(--mute);font-size:12px;margin-bottom:12px;border-bottom:3px solid var(--gold);padding-bottom:10px}
+.logo{background:#fff;border-radius:12px;padding:6px;text-align:center;margin-bottom:10px}.logo img{height:64px}
+aside a,aside button.nav{display:block;width:100%;text-align:left;padding:9px 12px;border-radius:10px;color:var(--text);background:none;border:0;text-decoration:none;cursor:pointer;font:inherit}
+aside a:hover,aside button.nav:hover{background:#1b3039}
+aside a.on{background:var(--accent);color:#06210f;font-weight:600}
+main{margin-left:240px;flex:1;padding:18px;min-width:0}
+.topbar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.topbar h2{margin:0;flex:1;font-size:20px}
+select,input,textarea,button{font:inherit;color:var(--text);background:#0c161b;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+button{cursor:pointer}button.pri{background:var(--accent);color:#06210f;border:0;font-weight:600}
+button.sm{padding:4px 9px;font-size:13px}
+.panel{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:12px;padding:14px;margin-bottom:14px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+tr.click{cursor:pointer}tr.click:hover{background:#16262e}
+.tablewrap{overflow-x:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+label{display:block;font-size:12px;color:var(--mute);margin-bottom:3px}
+label input,label select{width:100%}
+.check{display:flex;gap:8px;align-items:center;color:var(--text);font-size:14px}.check input{width:auto}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;background:#1b3039}
+.tag.warn{color:var(--bad)}.tag.ok{color:var(--ok)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.note{color:var(--mute);font-size:12px}
+.banner{background:#2a1c1c;border:1px solid var(--bad);color:#ffb4b4;padding:8px 12px;border-radius:8px;margin:8px 0}
+.err{color:var(--bad);margin:8px 0}
+.login{max-width:380px;margin:8vh auto;padding:0 16px}
+.login .panel{padding:20px}
+.login label{margin-top:10px}
+.grow{flex:1;min-width:200px}
+dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:18px;max-width:420px;width:92vw}
+dialog::backdrop{background:#000a}
+.sidefoot{margin-top:16px;padding-top:10px;border-top:1px solid var(--line)}
+@media(max-width:800px){aside{position:static;width:100%;border-right:0;border-bottom:1px solid var(--line)}.layout{display:block}main{margin-left:0}}

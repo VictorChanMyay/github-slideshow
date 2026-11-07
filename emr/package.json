@@ -1,0 +1,13 @@
+{
+  "name": "clinic-emr",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Volunteer EMR prototype (zero dependencies). Demo data only.",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "start": "node server.js",
+    "demo": "EMR_DEMO=1 node server.js",
+    "test": "node --test --no-warnings test/m1.test.js",
+    "i18n:report": "node tools/i18n-report.js"
+  }
+}
