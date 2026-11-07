@@ -3,7 +3,7 @@
 Everything the clinic needs to own, run and judge this prototype. Written for the clinic's project owner and Tech Team.
 
 ## 1. What is delivered
-A working, multi-user EMR prototype: 10 milestones, 245 automated tests, about 70 screens' worth of features, **zero npm dependencies**, one SQLite file. See `README.md` for the feature list by milestone and `PLAN.md` for design decisions.
+A working, multi-user EMR prototype: 10 milestones, 245 automated tests, **zero npm dependencies**, one SQLite file. See `README.md` for the feature list by milestone and `PLAN.md` for design decisions.
 
 | Area | What exists |
 |---|---|
